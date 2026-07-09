@@ -9,8 +9,12 @@ from fastapi import FastAPI
 from app.api import api_router
 from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging
+from app.embedding.ollama_embedding import OllamaEmbeddingProvider
 from app.prompt.prompt_builder import PromptBuilder
 from app.providers.ollama_provider import OllamaProvider
+from app.services.embedding_service import EmbeddingService
+from app.services.vector_store_service import VectorStoreService
+from app.vectorstore.chroma_provider import ChromaVectorStoreProvider
 
 logger = logging.getLogger(__name__)
 
@@ -28,12 +32,28 @@ def create_lifespan(
             model=settings.chat_model,
             timeout=settings.request_timeout,
         )
+        embedding_provider = OllamaEmbeddingProvider(
+            host=settings.ollama_host,
+            model=settings.embedding_model,
+            timeout=settings.request_timeout,
+        )
         await provider.start()
+        await embedding_provider.start()
         application.state.llm_provider = provider
         application.state.prompt_builder = prompt_builder
+        application.state.embedding_service = EmbeddingService(
+            embedding_provider
+        )
+        application.state.vector_store_service = VectorStoreService(
+            ChromaVectorStoreProvider(
+                persistence_path=settings.vector_db_path,
+                collection_name=settings.vector_collection_name,
+            )
+        )
         try:
             yield
         finally:
+            await embedding_provider.close()
             await provider.close()
 
     return lifespan

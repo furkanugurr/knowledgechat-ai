@@ -2,6 +2,7 @@
 
 import logging
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -18,6 +19,11 @@ class Settings(BaseSettings):
     log_level: str = Field(validation_alias="LOG_LEVEL")
     ollama_host: str = Field(validation_alias="OLLAMA_HOST")
     chat_model: str = Field(validation_alias="CHAT_MODEL")
+    embedding_model: str = Field(validation_alias="EMBEDDING_MODEL")
+    vector_db_path: Path = Field(validation_alias="VECTOR_DB_PATH")
+    vector_collection_name: str = Field(
+        validation_alias="VECTOR_COLLECTION_NAME"
+    )
     request_timeout: float = Field(
         validation_alias="REQUEST_TIMEOUT",
         gt=0,

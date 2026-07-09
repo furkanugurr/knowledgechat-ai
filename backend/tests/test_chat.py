@@ -11,6 +11,9 @@ os.environ.setdefault("PORT", "8000")
 os.environ.setdefault("LOG_LEVEL", "WARNING")
 os.environ.setdefault("OLLAMA_HOST", "http://localhost:11434")
 os.environ.setdefault("CHAT_MODEL", "test-model")
+os.environ.setdefault("EMBEDDING_MODEL", "test-embedding-model")
+os.environ.setdefault("VECTOR_DB_PATH", "/tmp/knowledgechat-test-chroma")
+os.environ.setdefault("VECTOR_COLLECTION_NAME", "knowledgechat-tests")
 os.environ.setdefault("REQUEST_TIMEOUT", "1")
 
 from fastapi.testclient import TestClient

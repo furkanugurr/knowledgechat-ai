@@ -39,6 +39,7 @@ Application boundaries and technology decisions will be recorded in `docs/adr/` 
 knowledgechat-ai/
 ├── backend/            # Backend application workspace
 ├── frontend/           # Frontend application workspace
+├── knowledge_base/     # Administrator-maintained Markdown knowledge
 ├── docs/
 │   ├── adr/            # Architecture Decision Records
 │   ├── milestones/     # Milestone plans and outcomes
