@@ -38,6 +38,8 @@ logs/
 chroma/
 chroma_db/
 .chroma/
+backend/data/chroma/
+backend/data/index_cache.json
 
 # Cache
 .cache/

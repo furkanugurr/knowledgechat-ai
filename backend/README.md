@@ -34,7 +34,7 @@ backend/
 │   ├── vectorstore/    # Vector storage contracts and ChromaDB provider
 │   └── main.py         # FastAPI application factory and entry point
 ├── data/
-│   └── index_cache.json # Incremental knowledge index state
+│   └── .gitkeep        # Runtime data directory placeholder
 ├── scripts/
 │   └── index_knowledge.py # Local end-to-end indexing utility
 ├── tests/              # Backend test suite
@@ -143,6 +143,8 @@ compared with `backend/data/index_cache.json`:
 Unchanged files are read only once for hashing. `IndexResult.chunks` contains
 only new or changed chunks, keeping memory and future embedding work
 proportional to the change set.
+
+The cache file is generated at runtime and intentionally excluded from Git.
 
 The versioned cache uses this structure:
 
@@ -421,6 +423,8 @@ ollama pull nomic-embed-text
 Configure `.env` with the local Ollama API, selected model, and request timeout:
 
 ```dotenv
+ENVIRONMENT=development
+API_V1_PREFIX=/api/v1
 OLLAMA_HOST=http://localhost:11434
 CHAT_MODEL=gemma3
 EMBEDDING_MODEL=nomic-embed-text
