@@ -4,7 +4,7 @@ import logging
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field, field_validator
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -13,9 +13,15 @@ class Settings(BaseSettings):
 
     app_name: str = Field(validation_alias="APP_NAME")
     app_version: str = Field(validation_alias="APP_VERSION")
-    app_env: str = Field(validation_alias="APP_ENV")
+    environment: str = Field(
+        validation_alias=AliasChoices("ENVIRONMENT", "APP_ENV")
+    )
     host: str = Field(validation_alias="HOST")
     port: int = Field(validation_alias="PORT", ge=1, le=65535)
+    api_v1_prefix: str = Field(
+        default="/api/v1",
+        validation_alias="API_V1_PREFIX",
+    )
     log_level: str = Field(validation_alias="LOG_LEVEL")
     ollama_host: str = Field(validation_alias="OLLAMA_HOST")
     chat_model: str = Field(validation_alias="CHAT_MODEL")
@@ -52,6 +58,15 @@ class Settings(BaseSettings):
         normalized_value = value.upper()
         if normalized_value not in logging.getLevelNamesMapping():
             raise ValueError(f"Unsupported log level: {value}")
+        return normalized_value
+
+    @field_validator("api_v1_prefix")
+    @classmethod
+    def validate_api_v1_prefix(cls, value: str) -> str:
+        """Normalize and validate the API prefix."""
+        normalized_value = value.rstrip("/")
+        if not normalized_value.startswith("/"):
+            raise ValueError("API_V1_PREFIX must start with '/'")
         return normalized_value
 
     @property

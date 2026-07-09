@@ -85,11 +85,14 @@ def create_application(settings: Settings | None = None) -> FastAPI:
         allow_methods=["GET", "POST", "OPTIONS"],
         allow_headers=["Content-Type"],
     )
-    application.include_router(api_router)
+    application.include_router(
+        api_router,
+        prefix=application_settings.api_v1_prefix,
+    )
 
     logger.info(
         "Application configured",
-        extra={"app_env": application_settings.app_env},
+        extra={"app_env": application_settings.environment},
     )
     return application
 

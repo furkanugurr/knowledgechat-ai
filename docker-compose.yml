@@ -1,1 +1,51 @@
-services: {}
+services:
+  backend:
+    build:
+      context: ./backend
+    environment:
+      APP_NAME: ${APP_NAME:-KnowledgeChat AI Backend}
+      APP_VERSION: ${APP_VERSION:-0.1.0}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      HOST: 0.0.0.0
+      PORT: 8000
+      API_V1_PREFIX: ${API_V1_PREFIX:-/api/v1}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
+      CHAT_MODEL: ${CHAT_MODEL:-gemma3}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-nomic-embed-text}
+      VECTOR_DB_PATH: /workspace/backend/data/chroma
+      VECTOR_COLLECTION_NAME: ${VECTOR_COLLECTION_NAME:-knowledgechat}
+      RETRIEVAL_TOP_K: ${RETRIEVAL_TOP_K:-5}
+      REQUEST_TIMEOUT: ${REQUEST_TIMEOUT:-60}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./knowledge_base:/workspace/knowledge_base:ro
+      - backend_data:/workspace/backend/data
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "5173:5173"
+
+volumes:
+  backend_data:
