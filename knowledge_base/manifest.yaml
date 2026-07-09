@@ -1,0 +1,6 @@
+version: 1
+default_language: en
+chunk_size: 1200
+chunk_overlap: 150
+supported_extensions:
+  - md
