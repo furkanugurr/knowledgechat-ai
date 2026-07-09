@@ -1,9 +1,19 @@
 # KnowledgeChat AI
 
+> **Status:** v1.0-ready student project
+
 KnowledgeChat AI is an offline-first knowledge assistant that answers questions
 from administrator-maintained Markdown documents. It uses Ollama for local chat
 and embedding models, ChromaDB for vector storage, and Retrieval-Augmented
 Generation (RAG) to return grounded answers with citation metadata.
+
+## Problem It Solves
+
+General-purpose chat models can answer without using a project's approved
+material or showing which sources informed the response. KnowledgeChat AI
+retrieves relevant sections from a curated local knowledge base, adds them to
+the model prompt, and returns source metadata with the answer. This provides a
+small, understandable example of grounded local AI.
 
 ## Architecture
 
@@ -193,12 +203,17 @@ docker compose down --volumes
 ## Manual RAG Test
 
 1. Start Ollama and pull both models.
-2. Add a Markdown document under `knowledge_base/`.
+2. Use the included sample documents or add a Markdown document under
+   `knowledge_base/`.
 3. Start the backend or Docker Compose.
 4. Run the knowledge indexing command.
 5. Start/open the frontend.
 6. Ask a question covered by the indexed document.
 7. Verify the answer and source cards shown below it.
+
+For a presentation-ready walkthrough and sample questions, see
+[`docs/DEMO.md`](docs/DEMO.md). A concise submission overview is available in
+[`docs/PROJECT_SUMMARY.md`](docs/PROJECT_SUMMARY.md).
 
 ## API Examples
 
@@ -241,8 +256,32 @@ knowledgechat-ai/
 ├── backend/          # FastAPI, RAG, indexing, and vector storage
 ├── frontend/         # React chat interface
 ├── knowledge_base/   # Curated Markdown documents and manifest
-├── docs/             # Architecture and milestone documentation
+├── docs/             # Demo, project summary, and architecture documents
 └── docker-compose.yml
+```
+
+## Testing
+
+Backend tests do not require a running Ollama instance:
+
+```bash
+cd backend
+python -m unittest discover -s tests -v
+```
+
+Validate the frontend:
+
+```bash
+cd frontend
+npm ci
+npm run build
+npm audit
+```
+
+When Docker is available, validate the Compose configuration:
+
+```bash
+docker compose config
 ```
 
 ## Current Limitations
@@ -253,3 +292,12 @@ knowledgechat-ai/
 - There is no authentication, admin panel, or document upload UI.
 - Retrieval does not include filtering, reranking, or hybrid search.
 - Docker setup targets local development, not cloud deployment.
+
+## Future Improvements
+
+- Stream generated responses to the frontend.
+- Add optional conversation memory with explicit privacy controls.
+- Evaluate retrieval and answer quality with a repeatable test dataset.
+- Add filtering or reranking behind the existing retrieval service.
+- Provide administrator tooling for reviewing knowledge indexing status.
+- Add more LLM and embedding providers through the existing abstractions.

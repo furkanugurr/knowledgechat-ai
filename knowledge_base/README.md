@@ -22,6 +22,9 @@ existing categories do not accurately describe the material.
 This root `README.md` documents the collection and is excluded from knowledge
 loading.
 
+The repository includes short educational documents for Python, FastAPI, React,
+Docker, and Git so the local RAG flow can be demonstrated immediately.
+
 `manifest.yaml` configures the collection's default language, supported file
 extensions, chunk size, and chunk overlap. Update its `version` when making a
 deliberate indexing-policy change. The manifest is configuration and is not
@@ -56,4 +59,4 @@ loaded as a knowledge document.
 - Use relative links for repository-local references.
 
 These conventions make heading-aware chunking predictable and preserve useful
-context for the future retrieval pipeline.
+context for the retrieval pipeline.
