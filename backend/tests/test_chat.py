@@ -15,6 +15,7 @@ os.environ.setdefault("EMBEDDING_MODEL", "test-embedding-model")
 os.environ.setdefault("VECTOR_DB_PATH", "/tmp/knowledgechat-test-chroma")
 os.environ.setdefault("VECTOR_COLLECTION_NAME", "knowledgechat-tests")
 os.environ.setdefault("REQUEST_TIMEOUT", "1")
+os.environ.setdefault("CORS_ORIGINS", "http://localhost:5173")
 
 from fastapi.testclient import TestClient
 
@@ -145,6 +146,23 @@ class ChatEndpointTests(unittest.TestCase):
             )
 
         self.assertEqual(response.status_code, 422)
+
+    def test_allows_configured_frontend_origin(self) -> None:
+        with self.create_client(SuccessfulChatService()) as client:
+            response = client.options(
+                "/api/v1/chat",
+                headers={
+                    "Origin": "http://localhost:5173",
+                    "Access-Control-Request-Method": "POST",
+                    "Access-Control-Request-Headers": "content-type",
+                },
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.headers["access-control-allow-origin"],
+            "http://localhost:5173",
+        )
 
     def test_retrieval_failure_is_safe(self) -> None:
         with self.create_client(RetrievalFailedChatService()) as client:

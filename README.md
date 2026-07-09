@@ -11,21 +11,19 @@ KnowledgeChat AI is an offline-first AI knowledge assistant powered by Ollama an
 
 ## Technology Stack
 
-The planned stack includes:
+The current stack includes:
 
-- **Backend:** Python
-- **Frontend:** React
+- **Backend:** Python 3.12, FastAPI, Pydantic Settings
+- **Frontend:** React, TypeScript, Vite, Tailwind CSS
 - **Local AI runtime:** Ollama
 - **Retrieval:** ChromaDB
 - **Container orchestration:** Docker Compose
 
-Specific frameworks, libraries, and versions will be selected and documented through architecture decisions as the project evolves.
-
 ## Planned Architecture
 
-The system is planned as a modular application with:
+The system is a modular application with:
 
-- A frontend for end-user interaction and administrative workflows.
+- A frontend for end-user knowledge chat and citation display.
 - A backend responsible for application orchestration and knowledge retrieval.
 - Ollama providing local chat and embedding models.
 - ChromaDB storing and searching vectorized knowledge.
@@ -54,6 +52,31 @@ knowledgechat-ai/
 ├── .env.example        # Environment variable template
 └── docker-compose.yml  # Local orchestration skeleton
 ```
+
+## Run Locally
+
+Start the backend:
+
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+cp .env.example .env
+uvicorn app.main:app --reload
+```
+
+In another terminal, start the frontend:
+
+```bash
+cd frontend
+npm install
+cp .env.example .env
+npm run dev
+```
+
+The frontend runs at `http://localhost:5173` and calls the backend configured by
+`VITE_API_BASE_URL`.
 
 ## Development Roadmap
 
