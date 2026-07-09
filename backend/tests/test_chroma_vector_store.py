@@ -13,7 +13,10 @@ from app.knowledge.models import KnowledgeChunk, KnowledgeMetadata
 from app.vectorstore.chroma_provider import ChromaVectorStoreProvider
 from app.vectorstore.provider import (
     CollectionCreationError,
+    EmptyVectorStoreError,
+    InvalidVectorSearchResultError,
     VectorDeleteError,
+    VectorSearchError,
     VectorStoreProvider,
     VectorStoreUnavailableError,
     VectorUpsertError,
@@ -75,6 +78,17 @@ class ChromaVectorStoreTests(unittest.TestCase):
         self.assertEqual(info.record_count, 0)
         self.assertTrue(provider.health_check())
         self.assertTrue(self.persistence_path.exists())
+
+    def test_rejects_existing_collection_with_non_cosine_metric(self) -> None:
+        chromadb.PersistentClient(
+            path=str(self.persistence_path)
+        ).get_or_create_collection(
+            name=self.collection_name,
+            embedding_function=None,
+        )
+
+        with self.assertRaises(CollectionCreationError):
+            self.create_provider().create_collection()
 
     def test_upserts_document_embedding_and_metadata(self) -> None:
         provider = self.create_provider()
@@ -205,6 +219,52 @@ class ChromaVectorStoreTests(unittest.TestCase):
         self.assertEqual(info.record_count, 1)
         self.assertEqual(len(stored["embeddings"][0]), 3)
 
+    def test_search_returns_top_k_in_similarity_order(self) -> None:
+        provider = self.create_provider()
+        provider.upsert_embeddings(
+            [
+                create_embedded_chunk(
+                    "python/exact.md",
+                    "Exact match",
+                    values=[1.0, 0.0, 0.0],
+                ),
+                create_embedded_chunk(
+                    "python/near.md",
+                    "Near match",
+                    values=[0.8, 0.2, 0.0],
+                ),
+                create_embedded_chunk(
+                    "python/far.md",
+                    "Far match",
+                    values=[0.0, 1.0, 0.0],
+                ),
+            ]
+        )
+
+        records = provider.search(
+            EmbeddingVector(values=[1.0, 0.0, 0.0]),
+            top_k=2,
+        )
+
+        self.assertEqual(len(records), 2)
+        self.assertEqual(
+            [record.document for record in records],
+            ["Exact match", "Near match"],
+        )
+        self.assertGreaterEqual(
+            records[0].similarity_score,
+            records[1].similarity_score,
+        )
+
+    def test_search_rejects_empty_collection(self) -> None:
+        provider = self.create_provider()
+
+        with self.assertRaises(EmptyVectorStoreError):
+            provider.search(
+                EmbeddingVector(values=[1.0, 0.0, 0.0]),
+                top_k=5,
+            )
+
 
 class FailingCollection:
     """Collection test double with configurable operation failures."""
@@ -225,6 +285,17 @@ class FailingCollection:
     def delete(self, **kwargs: Any) -> None:
         if self._fail_operation == "delete":
             raise RuntimeError("delete failed")
+
+    def query(self, **kwargs: Any) -> dict[str, Any]:
+        if self._fail_operation == "query":
+            raise RuntimeError("query failed")
+        if self._fail_operation == "invalid_query":
+            return {"documents": None}
+        return {
+            "documents": [["Document"]],
+            "metadatas": [[{"relative_path": "test.md"}]],
+            "distances": [[0.1]],
+        }
 
 
 class FakeClient:
@@ -297,6 +368,34 @@ class ChromaVectorStoreErrorTests(unittest.TestCase):
 
         with self.assertRaises(VectorDeleteError):
             provider.delete_embeddings(["python/oop.md"])
+
+    def test_handles_search_failure(self) -> None:
+        collection = FailingCollection("query")
+        provider = ChromaVectorStoreProvider(
+            Path("/tmp/chroma-search-test"),
+            "failure-tests",
+            client_factory=lambda **kwargs: FakeClient(collection),
+        )
+
+        with self.assertRaises(VectorSearchError):
+            provider.search(
+                EmbeddingVector(values=[0.1, 0.2, 0.3]),
+                top_k=5,
+            )
+
+    def test_handles_invalid_search_results(self) -> None:
+        collection = FailingCollection("invalid_query")
+        provider = ChromaVectorStoreProvider(
+            Path("/tmp/chroma-invalid-search-test"),
+            "failure-tests",
+            client_factory=lambda **kwargs: FakeClient(collection),
+        )
+
+        with self.assertRaises(InvalidVectorSearchResultError):
+            provider.search(
+                EmbeddingVector(values=[0.1, 0.2, 0.3]),
+                top_k=5,
+            )
 
 
 if __name__ == "__main__":

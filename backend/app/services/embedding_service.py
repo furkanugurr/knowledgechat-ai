@@ -4,7 +4,11 @@ import logging
 from collections.abc import Sequence
 from time import perf_counter
 
-from app.embedding.models import EmbeddedChunk, EmbeddingResult
+from app.embedding.models import (
+    EmbeddedChunk,
+    EmbeddingResult,
+    EmbeddingVector,
+)
 from app.embedding.provider import (
     EmbeddingProvider,
     EmbeddingProviderInvalidResponseError,
@@ -19,6 +23,18 @@ class EmbeddingService:
 
     def __init__(self, provider: EmbeddingProvider) -> None:
         self._provider = provider
+
+    async def embed_text(self, text: str) -> EmbeddingVector:
+        """Generate one embedding without knowledge chunk construction."""
+        if not text.strip():
+            raise ValueError("text cannot be empty")
+
+        vectors = await self._provider.generate_embeddings([text])
+        if len(vectors) != 1:
+            raise EmbeddingProviderInvalidResponseError(
+                "Embedding provider must return exactly one vector"
+            )
+        return vectors[0]
 
     async def embed_chunks(
         self,

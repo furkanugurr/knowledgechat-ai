@@ -5,8 +5,8 @@ currently supports service health reporting and stateless, single-turn response
 generation through a provider-independent LLM interface. It can also generate
 embeddings for prepared knowledge chunks through a separate provider contract.
 Ollama is the current implementation for both contracts, and ChromaDB provides
-persistent local vector storage. Retrieval, memory, and conversation history
-are not included.
+persistent local vector storage and cosine similarity retrieval. RAG, memory,
+and conversation history are not included.
 
 ## Structure
 
@@ -23,6 +23,7 @@ backend/
 │   ├── models/         # Future domain and persistence models
 │   ├── prompt/         # Managed prompt construction
 │   ├── providers/      # LLM contract and provider implementations
+│   ├── retrieval/      # Semantic retrieval models and orchestration
 │   ├── schemas/        # Validated API request and response schemas
 │   ├── services/       # Provider-independent application services
 │   ├── system_prompts/
@@ -164,7 +165,7 @@ database or proprietary editor.
 The knowledge pipeline produces a validated `IndexResult`. The embedding layer
 can consume its changed chunks without altering loading, parsing, chunking,
 incremental detection, or reporting. Vector persistence and retrieval remain
-future stages.
+independent stages; retrieved context is not yet sent to an LLM prompt.
 
 ## Embedding Layer
 
@@ -257,9 +258,61 @@ chunk_index
 language
 ```
 
-The provider does not expose query or similarity-search methods. A future
-Retrieval layer can depend on a separate retrieval contract without changing
-indexing, embedding generation, or persistence.
+The provider exposes only unfiltered vector similarity search. Metadata
+filtering and reranking are deliberately not implemented.
+
+## Retrieval Layer
+
+Semantic retrieval remains independent from chat generation:
+
+```text
+User question
+      ↓
+RetrievalService
+      ↓
+Retriever
+      ├──→ EmbeddingService.embed_text()
+      ↓
+VectorStoreProvider.search()
+      ↓
+ChromaDB cosine query
+      ↓
+RetrievalResult
+```
+
+- `RetrievalService` applies the configured result limit and returns a
+  serializable result with execution duration.
+- `Retriever` generates one question embedding, executes vector search,
+  validates metadata, and sorts results by descending similarity.
+- `VectorStoreProvider.search()` keeps retrieval independent from ChromaDB.
+- `ChromaVectorStoreProvider` queries with the pre-generated question vector;
+  it does not use a Chroma embedding function.
+
+New Chroma collections are configured with HNSW cosine distance. Existing
+collections using another metric are rejected to prevent misleading scores.
+Chroma returns distances where lower is better, so the provider normalizes each
+result to cosine similarity with `1 - distance` and returns the highest score
+first.
+
+Each `RetrievedChunk` contains:
+
+```text
+chunk_text
+similarity_score
+document_name
+relative_path
+section_title
+chunk_index
+language
+```
+
+`RETRIEVAL_TOP_K` controls the maximum number of returned chunks and defaults
+to `5`. Empty collections, embedding failures, search failures, and malformed
+results have distinct retrieval exceptions.
+
+This layer prepares the project for RAG by producing validated context
+candidates. It does not modify prompts, call the chat model, or feed retrieved
+content into `ChatService`; therefore no RAG behavior exists yet.
 
 ## Run Locally
 
@@ -292,6 +345,7 @@ CHAT_MODEL=gemma3
 EMBEDDING_MODEL=nomic-embed-text
 VECTOR_DB_PATH=./data/chroma
 VECTOR_COLLECTION_NAME=knowledgechat
+RETRIEVAL_TOP_K=5
 REQUEST_TIMEOUT=60
 ```
 

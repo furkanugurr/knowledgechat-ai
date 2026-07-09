@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     vector_collection_name: str = Field(
         validation_alias="VECTOR_COLLECTION_NAME"
     )
+    retrieval_top_k: int = Field(
+        default=5,
+        validation_alias="RETRIEVAL_TOP_K",
+        ge=1,
+    )
     request_timeout: float = Field(
         validation_alias="REQUEST_TIMEOUT",
         gt=0,

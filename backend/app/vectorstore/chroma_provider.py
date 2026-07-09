@@ -2,17 +2,24 @@
 
 import hashlib
 import logging
+import math
 from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
 import chromadb
 
-from app.embedding.models import EmbeddedChunk
-from app.vectorstore.models import VectorCollectionInfo
+from app.embedding.models import EmbeddedChunk, EmbeddingVector
+from app.vectorstore.models import (
+    VectorCollectionInfo,
+    VectorSearchRecord,
+)
 from app.vectorstore.provider import (
     CollectionCreationError,
+    EmptyVectorStoreError,
+    InvalidVectorSearchResultError,
     VectorDeleteError,
+    VectorSearchError,
     VectorStoreProvider,
     VectorStoreUnavailableError,
     VectorUpsertError,
@@ -50,8 +57,11 @@ class ChromaVectorStoreProvider(VectorStoreProvider):
                 self._collection = client.get_or_create_collection(
                     name=self._collection_name,
                     embedding_function=None,
+                    configuration={"hnsw": {"space": "cosine"}},
                 )
+                self._validate_cosine_configuration(self._collection)
             except Exception as exc:
+                self._collection = None
                 raise CollectionCreationError(
                     f"Unable to create vector collection: "
                     f"{self._collection_name}"
@@ -145,6 +155,39 @@ class ChromaVectorStoreProvider(VectorStoreProvider):
             record_count=record_count,
         )
 
+    def search(
+        self,
+        query_embedding: EmbeddingVector,
+        top_k: int,
+    ) -> list[VectorSearchRecord]:
+        """Run unfiltered cosine similarity search in ChromaDB."""
+        if top_k <= 0:
+            raise ValueError("top_k must be greater than zero")
+
+        collection = self._require_collection()
+        try:
+            record_count = collection.count()
+            if record_count == 0:
+                raise EmptyVectorStoreError(
+                    "The vector collection is empty."
+                )
+
+            result = collection.query(
+                query_embeddings=[query_embedding.values],
+                n_results=min(top_k, record_count),
+                include=["documents", "metadatas", "distances"],
+            )
+            return self._parse_search_result(result)
+        except EmptyVectorStoreError:
+            raise
+        except InvalidVectorSearchResultError:
+            raise
+        except Exception as exc:
+            raise VectorSearchError(
+                f"Unable to search vector collection: "
+                f"{self._collection_name}"
+            ) from exc
+
     def health_check(self) -> bool:
         """Return whether the persistent Chroma client is operational."""
         try:
@@ -178,6 +221,19 @@ class ChromaVectorStoreProvider(VectorStoreProvider):
             self.create_collection()
         return self._collection
 
+    @staticmethod
+    def _validate_cosine_configuration(collection: Any) -> None:
+        """Reject an existing collection configured with another metric."""
+        configuration = getattr(collection, "configuration", None)
+        if configuration is None:
+            return
+
+        hnsw_configuration = configuration.get("hnsw") or {}
+        if hnsw_configuration.get("space") != "cosine":
+            raise CollectionCreationError(
+                "The vector collection must use cosine distance."
+            )
+
     def _delete_stale_records(
         self,
         collection: Any,
@@ -197,6 +253,61 @@ class ChromaVectorStoreProvider(VectorStoreProvider):
             stale_ids = set(existing["ids"]) - current_ids
             if stale_ids:
                 collection.delete(ids=sorted(stale_ids))
+
+    @staticmethod
+    def _parse_search_result(
+        result: Any,
+    ) -> list[VectorSearchRecord]:
+        """Validate Chroma's columnar result and normalize cosine scores."""
+        if not isinstance(result, dict):
+            raise InvalidVectorSearchResultError
+
+        try:
+            documents = result["documents"][0]
+            metadatas = result["metadatas"][0]
+            distances = result["distances"][0]
+        except (KeyError, IndexError, TypeError) as exc:
+            raise InvalidVectorSearchResultError from exc
+
+        if not (
+            isinstance(documents, list)
+            and isinstance(metadatas, list)
+            and isinstance(distances, list)
+            and len(documents) == len(metadatas) == len(distances)
+        ):
+            raise InvalidVectorSearchResultError
+
+        records: list[VectorSearchRecord] = []
+        for document, metadata, distance in zip(
+            documents,
+            metadatas,
+            distances,
+            strict=True,
+        ):
+            if (
+                not isinstance(document, str)
+                or not document
+                or not isinstance(metadata, dict)
+                or isinstance(distance, bool)
+                or not isinstance(distance, (int, float))
+                or not math.isfinite(distance)
+            ):
+                raise InvalidVectorSearchResultError
+
+            similarity = max(-1.0, min(1.0, 1.0 - float(distance)))
+            records.append(
+                VectorSearchRecord(
+                    document=document,
+                    similarity_score=similarity,
+                    metadata=metadata,
+                )
+            )
+
+        records.sort(
+            key=lambda record: record.similarity_score,
+            reverse=True,
+        )
+        return records
 
     @staticmethod
     def _record_id(embedded_chunk: EmbeddedChunk) -> str:
