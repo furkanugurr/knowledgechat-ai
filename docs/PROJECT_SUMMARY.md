@@ -3,8 +3,8 @@
 ## Project
 
 **KnowledgeChat AI** is an offline-first educational knowledge assistant. It
-answers questions from a curated Markdown knowledge base and returns metadata
-for the sources used during retrieval.
+answers questions from a curated Markdown/Word knowledge base and returns
+metadata for the sources used during retrieval.
 
 ## Purpose
 
@@ -23,7 +23,7 @@ for local development and classroom presentation.
 
 ## Main Modules
 
-- `knowledge`: discovers, parses, chunks, and tracks Markdown documents
+- `knowledge`: discovers, parses, chunks, and tracks Markdown/Word documents
 - `embedding`: defines embedding providers and the Ollama implementation
 - `vectorstore`: persists embeddings through a ChromaDB provider
 - `retrieval`: embeds questions and finds the most similar chunks
@@ -34,11 +34,11 @@ for local development and classroom presentation.
 
 ## RAG Pipeline
 
-The indexing command reads Markdown files, creates heading-aware chunks,
-generates embeddings, and stores them in ChromaDB. For a chat request, the
-backend embeds the question, retrieves relevant chunks, inserts their text into
-the managed prompt, and calls the local Ollama chat model. The API returns the
-generated answer and deduplicated source metadata.
+The indexing command reads Markdown and Word files, creates heading-aware
+chunks, generates embeddings, and stores them in ChromaDB. For a chat request,
+the backend embeds the question, retrieves relevant chunks, inserts their text
+into the managed prompt, and calls the local Ollama chat model. The API returns
+the generated answer and deduplicated source metadata.
 
 ## Frontend
 
@@ -50,8 +50,8 @@ history.
 ## Local-First Design
 
 Ollama, ChromaDB, the backend, and the frontend can all run on the developer's
-machine. Knowledge remains in repository Markdown files maintained by the
-administrator. No hosted model provider is required for the demonstrated flow.
+machine. Knowledge remains in repository files maintained by the administrator.
+No hosted model provider is required for the demonstrated flow.
 
 ## Current Limitations
 

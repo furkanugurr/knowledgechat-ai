@@ -1,8 +1,10 @@
 # KnowledgeChat AI Demo Guide
 
 This guide demonstrates the local RAG workflow using the educational Markdown
-documents included in `knowledge_base/`. Model wording may vary, but the source
-cards should point to relevant repository documents.
+documents included in `knowledge_base/`. Administrator-maintained Word
+(`.docx`) files can also be added there and indexed with the same command.
+Model wording may vary, but the source cards should point to relevant
+repository documents.
 
 ## 1. Start Ollama
 
@@ -44,8 +46,8 @@ From the `backend/` directory with the virtual environment active:
 python scripts/index_knowledge.py
 ```
 
-The script reads the repository Markdown files, generates embeddings through
-Ollama, and stores vectors in the local ChromaDB path.
+The script reads the repository Markdown/Word files, generates embeddings
+through Ollama, and stores vectors in the local ChromaDB path.
 
 ## 5. Start the Frontend
 

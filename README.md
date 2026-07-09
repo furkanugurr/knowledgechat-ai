@@ -3,9 +3,10 @@
 > **Status:** v1.0-ready student project
 
 KnowledgeChat AI is an offline-first knowledge assistant that answers questions
-from administrator-maintained Markdown documents. It uses Ollama for local chat
-and embedding models, ChromaDB for vector storage, and Retrieval-Augmented
-Generation (RAG) to return grounded answers with citation metadata.
+from administrator-maintained Markdown and Word (`.docx`) documents. It uses
+Ollama for local chat and embedding models, ChromaDB for vector storage, and
+Retrieval-Augmented Generation (RAG) to return grounded answers with citation
+metadata.
 
 ## Problem It Solves
 
@@ -38,7 +39,7 @@ knowledge_base/ → indexer → embeddings → persistent ChromaDB
 - Local, single-turn RAG chat
 - Markdown assistant responses
 - Source citations without exposing chunk text or embeddings
-- Administrator-managed Markdown knowledge base
+- Administrator-managed Markdown and Word knowledge base
 - Incremental SHA-256-based indexing
 - Persistent local ChromaDB storage
 - Responsive React interface
@@ -138,7 +139,8 @@ The API is available at `http://localhost:8000`.
 
 ### 2. Index the Knowledge Base
 
-Add administrator-reviewed Markdown files under `knowledge_base/`, then run:
+Add administrator-reviewed Markdown or Word (`.docx`) files under
+`knowledge_base/`, then run:
 
 ```bash
 cd backend
@@ -203,7 +205,7 @@ docker compose down --volumes
 ## Manual RAG Test
 
 1. Start Ollama and pull both models.
-2. Use the included sample documents or add a Markdown document under
+2. Use the included sample documents or add a Markdown/Word document under
    `knowledge_base/`.
 3. Start the backend or Docker Compose.
 4. Run the knowledge indexing command.
@@ -255,7 +257,7 @@ Example response:
 knowledgechat-ai/
 ├── backend/          # FastAPI, RAG, indexing, and vector storage
 ├── frontend/         # React chat interface
-├── knowledge_base/   # Curated Markdown documents and manifest
+├── knowledge_base/   # Curated Markdown/Word documents and manifest
 ├── docs/             # Demo, project summary, and architecture documents
 └── docker-compose.yml
 ```

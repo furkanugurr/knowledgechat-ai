@@ -5,7 +5,8 @@ KnowledgeChat AI. End users do not upload or modify these files.
 
 ## Folder Organization
 
-Store each Markdown document under the folder for its primary subject:
+Store each Markdown (`.md`) or Word (`.docx`) document under the folder for its
+primary subject:
 
 ```text
 knowledge_base/
@@ -22,8 +23,9 @@ existing categories do not accurately describe the material.
 This root `README.md` documents the collection and is excluded from knowledge
 loading.
 
-The repository includes short educational documents for Python, FastAPI, React,
-Docker, and Git so the local RAG flow can be demonstrated immediately.
+The repository includes short educational Markdown documents for Python,
+FastAPI, React, Docker, and Git so the local RAG flow can be demonstrated
+immediately.
 
 `manifest.yaml` configures the collection's default language, supported file
 extensions, chunk size, and chunk overlap. Update its `version` when making a
@@ -33,7 +35,7 @@ loaded as a knowledge document.
 ## Naming Conventions
 
 - Use lowercase `snake_case` file names.
-- Use the `.md` extension.
+- Use `.md` for Markdown documents or `.docx` for Word documents.
 - Prefer descriptive names such as `dependency_injection.md`.
 - Avoid spaces, dates, and version numbers in file names unless they are
   essential to the subject.
@@ -45,8 +47,19 @@ loaded as a knowledge document.
 - State uncertainty and version-specific behavior explicitly.
 - Do not include secrets, credentials, personal data, or generated chat logs.
 - Update existing documents instead of creating near-duplicates.
-- Write in English by default. The parser language can be configured when
-  another language is intentionally used.
+- Write in English by default unless the knowledge base is intentionally
+  maintained in another language. Turkish content is supported.
+
+## Word Guidelines
+
+- Use real Word heading styles such as `Heading 1`, `Heading 2`, or their
+  Turkish equivalents such as `Başlık 1`.
+- Keep each `.docx` file focused on one topic.
+- Use normal paragraphs for body text.
+- Use simple tables only when row/column structure improves clarity.
+- Avoid images, text boxes, comments, tracked changes, and complex layouts for
+  knowledge content.
+- Do not store secrets, credentials, personal data, or generated chat logs.
 
 ## Markdown Guidelines
 

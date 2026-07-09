@@ -18,11 +18,11 @@ from app.knowledge.models import (
     KnowledgeChunk,
     KnowledgeDocument,
 )
-from app.knowledge.parser import MarkdownParser
+from app.knowledge.parser import DocumentParser, KnowledgeParser
 
 logger = logging.getLogger(__name__)
 
-ParserFactory = Callable[[Path, str], MarkdownParser]
+ParserFactory = Callable[[Path, str], DocumentParser]
 ChunkerFactory = Callable[[int, int], TextChunker]
 
 
@@ -40,7 +40,7 @@ class KnowledgeIndexer:
         cache: IndexCache,
         metadata_extractor: MetadataExtractor | None = None,
         file_hasher: FileHasher | None = None,
-        parser_factory: ParserFactory = MarkdownParser,
+        parser_factory: ParserFactory = KnowledgeParser,
         chunker_factory: ChunkerFactory = TextChunker,
     ) -> None:
         self._loader = loader
