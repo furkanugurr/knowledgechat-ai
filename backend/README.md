@@ -428,7 +428,11 @@ VECTOR_DB_PATH=./data/chroma
 VECTOR_COLLECTION_NAME=knowledgechat
 RETRIEVAL_TOP_K=5
 REQUEST_TIMEOUT=60
+CORS_ORIGINS=http://localhost:5173
 ```
+
+`CORS_ORIGINS` is a comma-separated list of browser origins allowed to call the
+API. Its default permits the local Vite development server.
 
 ## Manual RAG Test
 
@@ -464,7 +468,6 @@ The success response includes citations:
 
 Still intentionally excluded:
 
-- Frontend
 - Conversation memory
 - Streaming
 - Reranking, hybrid search, and filtering

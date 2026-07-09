@@ -5,6 +5,7 @@ from collections.abc import AsyncIterator, Callable
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import api_router
 from app.core.config import Settings, get_settings
@@ -78,6 +79,12 @@ def create_application(settings: Settings | None = None) -> FastAPI:
         lifespan=create_lifespan(application_settings),
     )
     application.state.settings = application_settings
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=application_settings.cors_origin_list,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["Content-Type"],
+    )
     application.include_router(api_router)
 
     logger.info(

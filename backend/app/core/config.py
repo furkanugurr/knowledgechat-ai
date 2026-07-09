@@ -33,6 +33,10 @@ class Settings(BaseSettings):
         validation_alias="REQUEST_TIMEOUT",
         gt=0,
     )
+    cors_origins: str = Field(
+        default="http://localhost:5173",
+        validation_alias="CORS_ORIGINS",
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -49,6 +53,15 @@ class Settings(BaseSettings):
         if normalized_value not in logging.getLevelNamesMapping():
             raise ValueError(f"Unsupported log level: {value}")
         return normalized_value
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        """Return configured CORS origins as a normalized list."""
+        return [
+            origin.strip()
+            for origin in self.cors_origins.split(",")
+            if origin.strip()
+        ]
 
 
 @lru_cache
