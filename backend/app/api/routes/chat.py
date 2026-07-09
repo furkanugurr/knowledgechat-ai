@@ -11,7 +11,11 @@ from app.providers.base import (
     LLMProviderTimeoutError,
 )
 from app.schemas.chat import ChatRequest, ChatResponse
-from app.services.chat_service import ChatService
+from app.services.chat_service import (
+    ChatPromptError,
+    ChatRetrievalError,
+    ChatService,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +43,16 @@ async def create_chat_response(
 
     try:
         response = await chat_service.generate_response(chat_request.message)
+    except ChatRetrievalError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Knowledge retrieval service unavailable.",
+        ) from exc
+    except ChatPromptError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to build the response prompt.",
+        ) from exc
     except LLMProviderTimeoutError as exc:
         raise HTTPException(
             status_code=status.HTTP_504_GATEWAY_TIMEOUT,

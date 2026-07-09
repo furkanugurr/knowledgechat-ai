@@ -1,6 +1,9 @@
 """Build final prompts from managed prompt files and user messages."""
 
+from collections.abc import Sequence
 from pathlib import Path
+
+from app.retrieval.models import RetrievedChunk
 
 
 class PromptBuilder:
@@ -27,13 +30,49 @@ class PromptBuilder:
             ),
         )
 
-    def build(self, user_message: str) -> str:
-        """Return one final prompt containing all managed sections."""
+    def build(
+        self,
+        user_message: str,
+        retrieved_context: Sequence[RetrievedChunk] | None = None,
+    ) -> str:
+        """Return one final prompt with optional knowledge context."""
+        sections = [
+            f"SYSTEM PROMPT\n{self._system_prompt}",
+            f"DEVELOPER PROMPT\n{self._developer_prompt}",
+        ]
+        if retrieved_context:
+            sections.append(
+                "KNOWLEDGE CONTEXT\n"
+                f"{self._format_context(retrieved_context)}"
+            )
+        sections.append(f"USER MESSAGE\n{user_message}")
+        return "\n\n".join(sections)
+
+    @staticmethod
+    def _format_context(
+        retrieved_context: Sequence[RetrievedChunk],
+    ) -> str:
+        """Format retrieved chunks as clearly separated prompt sources."""
+        sources = []
+        for source_index, chunk in enumerate(
+            retrieved_context,
+            start=1,
+        ):
+            sources.append(
+                "\n".join(
+                    (
+                        f"### Source {source_index}",
+                        f"Document: {chunk.relative_path}",
+                        f"Section: {chunk.section_title}",
+                        "Content:",
+                        chunk.chunk_text,
+                    )
+                )
+            )
         return "\n\n".join(
             (
-                f"SYSTEM PROMPT\n{self._system_prompt}",
-                f"DEVELOPER PROMPT\n{self._developer_prompt}",
-                f"USER MESSAGE\n{user_message}",
+                "## Knowledge Context",
+                *sources,
             )
         )
 

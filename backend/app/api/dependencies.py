@@ -7,6 +7,7 @@ from fastapi import Depends, Request
 from app.prompt.prompt_builder import PromptBuilder
 from app.providers.base import LLMProvider
 from app.services.chat_service import ChatService
+from app.services.retrieval_service import RetrievalService
 
 
 def get_llm_provider(request: Request) -> LLMProvider:
@@ -19,12 +20,22 @@ def get_prompt_builder(request: Request) -> PromptBuilder:
     return cast(PromptBuilder, request.app.state.prompt_builder)
 
 
+def get_retrieval_service(request: Request) -> RetrievalService:
+    """Return the application-managed retrieval service."""
+    return cast(RetrievalService, request.app.state.retrieval_service)
+
+
 def get_chat_service(
     provider: Annotated[LLMProvider, Depends(get_llm_provider)],
     prompt_builder: Annotated[PromptBuilder, Depends(get_prompt_builder)],
+    retrieval_service: Annotated[
+        RetrievalService,
+        Depends(get_retrieval_service),
+    ],
 ) -> ChatService:
     """Create a chat service with its abstract provider dependencies."""
     return ChatService(
         provider=provider,
         prompt_builder=prompt_builder,
+        retrieval_service=retrieval_service,
     )
