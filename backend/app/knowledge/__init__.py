@@ -24,7 +24,7 @@ from app.knowledge.models import (
     KnowledgeMetadata,
     KnowledgeSection,
 )
-from app.knowledge.parser import MarkdownParser
+from app.knowledge.parser import KnowledgeParser, MarkdownParser, WordParser
 
 __all__ = [
     "CacheError",
@@ -42,10 +42,12 @@ __all__ = [
     "KnowledgeLoader",
     "KnowledgeManifest",
     "KnowledgeMetadata",
+    "KnowledgeParser",
     "KnowledgeSection",
     "ManifestError",
     "ManifestLoader",
     "MarkdownParser",
     "MetadataExtractor",
     "TextChunker",
+    "WordParser",
 ]

@@ -37,7 +37,7 @@ class KnowledgeManifest(BaseModel):
         if not normalized:
             raise ValueError("supported_extensions cannot be empty")
 
-        unsupported = set(normalized) - {"md"}
+        unsupported = set(normalized) - {"docx", "md"}
         if unsupported:
             raise ValueError(
                 "Unsupported knowledge extensions: "

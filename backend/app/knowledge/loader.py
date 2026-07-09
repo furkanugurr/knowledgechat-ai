@@ -1,11 +1,11 @@
-"""Markdown file discovery for the repository knowledge base."""
+"""Supported file discovery for the repository knowledge base."""
 
 from collections.abc import Collection
 from pathlib import Path
 
 
 class KnowledgeLoader:
-    """Recursively discover knowledge Markdown files."""
+    """Recursively discover supported knowledge files."""
 
     def __init__(self, knowledge_base_path: Path) -> None:
         self._knowledge_base_path = knowledge_base_path.resolve()
@@ -17,7 +17,7 @@ class KnowledgeLoader:
 
     def discover(
         self,
-        supported_extensions: Collection[str] = ("md",),
+        supported_extensions: Collection[str] = ("md", "docx"),
     ) -> list[Path]:
         """Return sorted supported files contained by the knowledge base."""
         if not self._knowledge_base_path.is_dir():

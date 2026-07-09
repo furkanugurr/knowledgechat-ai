@@ -82,6 +82,15 @@ class PromptBuilderTests(unittest.TestCase):
             prompt.index("USER MESSAGE"),
         )
 
+    def test_default_prompt_preserves_user_question_language(self) -> None:
+        prompt = PromptBuilder.from_defaults().build("Python nedir?")
+
+        self.assertIn(
+            "Always answer in the same language as the user's question.",
+            prompt,
+        )
+        self.assertIn("If the user asks in Turkish, answer in Turkish.", prompt)
+
 
 if __name__ == "__main__":
     unittest.main()

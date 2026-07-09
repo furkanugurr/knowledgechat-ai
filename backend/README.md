@@ -79,8 +79,9 @@ knowledge-base fallback without calling the LLM.
 
 ## Knowledge Pipeline
 
-Administrators maintain source documents as Markdown under the repository-level
-`knowledge_base/` directory. End users cannot upload documents.
+Administrators maintain source documents as Markdown (`.md`) or Word (`.docx`)
+under the repository-level `knowledge_base/` directory. End users cannot upload
+documents.
 
 ```text
 KnowledgeIndexer
@@ -88,7 +89,9 @@ KnowledgeIndexer
     ├──→ IndexCache
     └──→ KnowledgeLoader
               ↓
-          MarkdownParser
+          KnowledgeParser
+            ├── MarkdownParser
+            └── WordParser
               ↓
           TextChunker
               ↓
@@ -102,8 +105,11 @@ KnowledgeIndexer
 - `ManifestLoader` validates dynamic language, extension, chunk size, and
   overlap configuration.
 - `IndexCache` persists versioned incremental state using atomic JSON writes.
-- `KnowledgeLoader` recursively discovers contained Markdown documents.
+- `KnowledgeLoader` recursively discovers contained Markdown and Word
+  documents.
+- `KnowledgeParser` dispatches each file to the correct format-specific parser.
 - `MarkdownParser` preserves source content, headings, and fenced code blocks.
+- `WordParser` extracts Word paragraphs, heading styles, and simple table text.
 - `TextChunker` keeps heading sections separate and splits long sections using
   configurable character size and overlap.
 - `MetadataExtractor` attaches source, section, ordering, language, and
@@ -117,11 +123,12 @@ loaded as knowledge. Detailed writing and naming rules are documented there.
 `knowledge_base/manifest.yaml` is loaded and validated on every indexing run:
 
 ```yaml
-version: 1
+version: 2
 default_language: en
 chunk_size: 1200
 chunk_overlap: 150
 supported_extensions:
+  - docx
   - md
 ```
 
@@ -166,12 +173,17 @@ The versioned cache uses this structure:
 Cache writes use a temporary file followed by an atomic replacement. Document
 content and generated chunks are deliberately not persisted in this cache.
 
-### Why Markdown
+### Why Markdown and Word
 
 Markdown is human-readable, diff-friendly, version-controlled, portable, and
 supports the headings and fenced code blocks needed for meaningful technical
 knowledge segmentation. It also keeps knowledge review independent from a
 database or proprietary editor.
+
+Word (`.docx`) is supported for administrator-maintained documents that already
+exist in business-friendly Word format. The parser intentionally extracts text,
+headings, and simple tables only; it does not depend on visual layout, comments,
+or tracked changes for retrieval quality.
 
 ### RAG Integration
 
@@ -378,8 +390,8 @@ Embeddings are never exposed.
 
 ## Local Knowledge Indexing
 
-Before testing RAG chat, place administrator-reviewed Markdown documents under
-`knowledge_base/`, then run the existing pipeline end to end:
+Before testing RAG chat, place administrator-reviewed Markdown or Word
+documents under `knowledge_base/`, then run the existing pipeline end to end:
 
 ```bash
 cd backend
@@ -388,7 +400,7 @@ python scripts/index_knowledge.py
 
 The script:
 
-1. Loads and incrementally indexes repository Markdown.
+1. Loads and incrementally indexes repository Markdown and Word documents.
 2. Generates embeddings with the configured Ollama embedding model.
 3. Upserts vectors and removes deleted documents in ChromaDB.
 4. Prints only files scanned/indexed, chunks embedded, and vectors stored.
@@ -440,7 +452,8 @@ API. Its default permits the local Vite development server.
 
 ## Manual RAG Test
 
-1. Add at least one Markdown knowledge document beneath `knowledge_base/`.
+1. Add at least one Markdown or Word knowledge document beneath
+   `knowledge_base/`.
 2. Start Ollama and ensure both configured models are available.
 3. Run `python scripts/index_knowledge.py` from `backend/`.
 4. Start the backend with `uvicorn app.main:app --reload`.

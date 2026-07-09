@@ -5,6 +5,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from docx import Document
+
 from app.knowledge.cache import CorruptedCacheError, IndexCache
 from app.knowledge.indexer import KnowledgeIndexer, KnowledgeIndexingError
 from app.knowledge.loader import KnowledgeLoader
@@ -16,6 +18,7 @@ default_language: en
 chunk_size: 80
 chunk_overlap: 10
 supported_extensions:
+  - docx
   - md
 """
 
@@ -49,10 +52,25 @@ class KnowledgeIndexerTests(unittest.TestCase):
         self._temporary_directory.cleanup()
 
     def write_document(self, relative_path: str, content: str) -> Path:
-        """Write one temporary knowledge Markdown document."""
+        """Write one temporary knowledge text document."""
         path = self.knowledge_base / relative_path
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content, encoding="utf-8")
+        return path
+
+    def write_word_document(
+        self,
+        relative_path: str,
+        heading: str,
+        content: str,
+    ) -> Path:
+        """Write one temporary Word knowledge document."""
+        path = self.knowledge_base / relative_path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        document = Document()
+        document.add_heading(heading, level=1)
+        document.add_paragraph(content)
+        document.save(path)
         return path
 
     def create_indexer(self) -> KnowledgeIndexer:
@@ -86,6 +104,32 @@ class KnowledgeIndexerTests(unittest.TestCase):
         self.assertIn("Knowledge Index Report", result.statistics.to_report())
         serialized = json.loads(result.model_dump_json())
         self.assertEqual(serialized["statistics"]["files_indexed"], 2)
+
+    def test_indexes_markdown_and_word_documents(self) -> None:
+        self.write_document(
+            "python/variables.md",
+            "# Variables\n\nVariables bind names to values.",
+        )
+        self.write_word_document(
+            "policies/onboarding.docx",
+            "Onboarding",
+            "Employees receive access before the first day.",
+        )
+
+        result = self.create_indexer().index()
+
+        indexed_paths = [
+            indexed_file.relative_path
+            for indexed_file in result.indexed_files
+        ]
+        self.assertEqual(
+            indexed_paths,
+            ["policies/onboarding.docx", "python/variables.md"],
+        )
+        self.assertIn(
+            "Employees receive access",
+            "\n".join(chunk.content for chunk in result.chunks),
+        )
 
     def test_skips_unchanged_documents(self) -> None:
         self.write_document("python/oop.md", "# OOP\n\nObjects and classes.")
