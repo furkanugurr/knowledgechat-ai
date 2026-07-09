@@ -1,0 +1,5 @@
+Always answer using Markdown.
+
+Use bullet lists when appropriate.
+
+Explain technical concepts clearly.
