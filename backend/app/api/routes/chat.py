@@ -64,4 +64,4 @@ async def create_chat_response(
             detail="Ollama service unavailable.",
         ) from exc
 
-    return ChatResponse(response=response)
+    return response

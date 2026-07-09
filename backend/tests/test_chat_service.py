@@ -83,16 +83,24 @@ def create_retrieval_result(
     )
 
 
-def create_retrieved_chunk() -> RetrievedChunk:
+def create_retrieved_chunk(
+    *,
+    similarity_score: float = 0.9,
+    document_name: str = "oop.md",
+    relative_path: str = "python/oop.md",
+    section_title: str = "Classes",
+    chunk_index: int = 0,
+    language: str = "en",
+) -> RetrievedChunk:
     """Create one retrieved knowledge chunk."""
     return RetrievedChunk(
         chunk_text="Classes define object behavior.",
-        similarity_score=0.9,
-        document_name="oop.md",
-        relative_path="python/oop.md",
-        section_title="Classes",
-        chunk_index=0,
-        language="en",
+        similarity_score=similarity_score,
+        document_name=document_name,
+        relative_path=relative_path,
+        section_title=section_title,
+        chunk_index=chunk_index,
+        language=language,
     )
 
 
@@ -114,7 +122,19 @@ class ChatServiceTests(unittest.IsolatedAsyncioTestCase):
 
         response = await service.generate_response("Explain classes.")
 
-        self.assertEqual(response, "Generated response")
+        self.assertEqual(response.response, "Generated response")
+        self.assertEqual(len(response.sources), 1)
+        self.assertEqual(
+            response.sources[0].model_dump(),
+            {
+                "document_name": "oop.md",
+                "relative_path": "python/oop.md",
+                "section_title": "Classes",
+                "chunk_index": 0,
+                "similarity_score": 0.9,
+                "language": "en",
+            },
+        )
         self.assertEqual(
             retrieval_service.received_question,
             "Explain classes.",
@@ -136,7 +156,8 @@ class ChatServiceTests(unittest.IsolatedAsyncioTestCase):
 
         response = await service.generate_response("Unknown topic")
 
-        self.assertEqual(response, NO_RELEVANT_CONTEXT_RESPONSE)
+        self.assertEqual(response.response, NO_RELEVANT_CONTEXT_RESPONSE)
+        self.assertEqual(response.sources, [])
         self.assertIsNone(provider.received_prompt)
 
     async def test_returns_safe_answer_for_empty_collection(self) -> None:
@@ -151,8 +172,38 @@ class ChatServiceTests(unittest.IsolatedAsyncioTestCase):
 
         response = await service.generate_response("Unknown topic")
 
-        self.assertEqual(response, NO_RELEVANT_CONTEXT_RESPONSE)
+        self.assertEqual(response.response, NO_RELEVANT_CONTEXT_RESPONSE)
+        self.assertEqual(response.sources, [])
         self.assertIsNone(provider.received_prompt)
+
+    async def test_removes_duplicate_citations_in_retrieval_order(self) -> None:
+        provider = RecordingProvider()
+        first_chunk = create_retrieved_chunk(similarity_score=0.95)
+        duplicate_chunk = create_retrieved_chunk(similarity_score=0.9)
+        second_source = create_retrieved_chunk(
+            similarity_score=0.8,
+            document_name="routing.md",
+            relative_path="fastapi/routing.md",
+            section_title="Route order",
+            chunk_index=2,
+        )
+        service = ChatService(
+            provider=provider,
+            prompt_builder=RecordingPromptBuilder(),  # type: ignore[arg-type]
+            retrieval_service=RetrievalServiceDouble(
+                result=create_retrieval_result(
+                    [first_chunk, duplicate_chunk, second_source]
+                )
+            ),
+        )
+
+        response = await service.generate_response("Question")
+
+        self.assertEqual(
+            [source.relative_path for source in response.sources],
+            ["python/oop.md", "fastapi/routing.md"],
+        )
+        self.assertEqual(response.sources[0].similarity_score, 0.95)
 
     async def test_wraps_retrieval_failure(self) -> None:
         service = ChatService(

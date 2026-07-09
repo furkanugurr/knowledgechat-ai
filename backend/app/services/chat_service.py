@@ -6,11 +6,12 @@ from typing import Protocol
 
 from app.prompt.prompt_builder import PromptBuilder
 from app.providers.base import LLMProvider
-from app.retrieval.models import RetrievalResult
+from app.retrieval.models import RetrievalResult, RetrievedChunk
 from app.retrieval.retriever import (
     EmptyCollectionError,
     RetrievalError,
 )
+from app.schemas.chat import ChatResponse, CitationSource
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +53,7 @@ class ChatService:
         self._prompt_builder = prompt_builder
         self._retrieval_service = retrieval_service
 
-    async def generate_response(self, user_message: str) -> str:
+    async def generate_response(self, user_message: str) -> ChatResponse:
         """Retrieve context, build a RAG prompt, and return the response."""
         provider_name = type(self._provider).__name__
         started_at = perf_counter()
@@ -64,7 +65,7 @@ class ChatService:
             )
         except EmptyCollectionError:
             logger.info("RAG retrieval returned an empty collection")
-            return NO_RELEVANT_CONTEXT_RESPONSE
+            return self._empty_context_response()
         except RetrievalError as exc:
             logger.error(
                 "RAG retrieval failed duration_seconds=%.3f",
@@ -79,7 +80,7 @@ class ChatService:
             retrieval_result.total_results,
         )
         if not retrieval_result.chunks:
-            return NO_RELEVANT_CONTEXT_RESPONSE
+            return self._empty_context_response()
 
         try:
             prompt = self._prompt_builder.build(
@@ -107,9 +108,51 @@ class ChatService:
             )
             raise
 
+        logger.info("Building citations")
+        sources = self._build_sources(retrieval_result.chunks)
+        logger.info("Citations built citation_count=%d", len(sources))
         logger.info(
-            "LLM response completed provider=%s duration_seconds=%.3f",
+            "Chat response completed provider=%s duration_seconds=%.3f",
             provider_name,
             perf_counter() - started_at,
         )
-        return response
+        return ChatResponse(response=response, sources=sources)
+
+    @staticmethod
+    def _empty_context_response() -> ChatResponse:
+        """Return the safe response used when no context is available."""
+        return ChatResponse(
+            response=NO_RELEVANT_CONTEXT_RESPONSE,
+            sources=[],
+        )
+
+    @staticmethod
+    def _build_sources(
+        chunks: list[RetrievedChunk],
+    ) -> list[CitationSource]:
+        """Build ordered citations, removing duplicate chunk references."""
+        sources: list[CitationSource] = []
+        seen: set[tuple[str, str | None, int]] = set()
+
+        for chunk in chunks:
+            citation_key = (
+                chunk.relative_path,
+                chunk.section_title,
+                chunk.chunk_index,
+            )
+            if citation_key in seen:
+                continue
+
+            seen.add(citation_key)
+            sources.append(
+                CitationSource(
+                    document_name=chunk.document_name,
+                    relative_path=chunk.relative_path,
+                    section_title=chunk.section_title,
+                    chunk_index=chunk.chunk_index,
+                    similarity_score=chunk.similarity_score,
+                    language=chunk.language,
+                )
+            )
+
+        return sources

@@ -25,14 +25,27 @@ from app.providers.base import (
     LLMProviderTimeoutError,
     LLMProviderUnavailableError,
 )
+from app.schemas.chat import ChatResponse, CitationSource
 from app.services.chat_service import ChatPromptError, ChatRetrievalError
 
 
 class SuccessfulChatService:
     """Chat service test double returning a successful response."""
 
-    async def generate_response(self, message: str) -> str:
-        return f"Response for: {message}"
+    async def generate_response(self, message: str) -> ChatResponse:
+        return ChatResponse(
+            response=f"Response for: {message}",
+            sources=[
+                CitationSource(
+                    document_name="oop.md",
+                    relative_path="python/oop.md",
+                    section_title="Classes",
+                    chunk_index=2,
+                    similarity_score=0.87,
+                    language="en",
+                )
+            ],
+        )
 
 
 class UnavailableChatService:
@@ -82,8 +95,21 @@ class ChatEndpointTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json(),
-            {"response": "Response for: Explain Python."},
+            {
+                "response": "Response for: Explain Python.",
+                "sources": [
+                    {
+                        "document_name": "oop.md",
+                        "relative_path": "python/oop.md",
+                        "section_title": "Classes",
+                        "chunk_index": 2,
+                        "similarity_score": 0.87,
+                        "language": "en",
+                    }
+                ],
+            },
         )
+        self.assertNotIn("chunk_text", response.json()["sources"][0])
 
     def test_ollama_unavailable(self) -> None:
         with self.create_client(UnavailableChatService()) as client:
