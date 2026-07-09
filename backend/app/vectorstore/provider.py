@@ -3,8 +3,8 @@
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 
-from app.embedding.models import EmbeddedChunk
-from app.vectorstore.models import VectorCollectionInfo
+from app.embedding.models import EmbeddedChunk, EmbeddingVector
+from app.vectorstore.models import VectorCollectionInfo, VectorSearchRecord
 
 
 class VectorStoreProviderError(Exception):
@@ -25,6 +25,18 @@ class VectorUpsertError(VectorStoreProviderError):
 
 class VectorDeleteError(VectorStoreProviderError):
     """Raised when vectors cannot be deleted."""
+
+
+class EmptyVectorStoreError(VectorStoreProviderError):
+    """Raised when a similarity search has no indexed vectors."""
+
+
+class VectorSearchError(VectorStoreProviderError):
+    """Raised when vector similarity search fails."""
+
+
+class InvalidVectorSearchResultError(VectorSearchError):
+    """Raised when a provider returns malformed search results."""
 
 
 class VectorStoreProvider(ABC):
@@ -51,6 +63,14 @@ class VectorStoreProvider(ABC):
     @abstractmethod
     def collection_info(self) -> VectorCollectionInfo:
         """Return current collection statistics."""
+
+    @abstractmethod
+    def search(
+        self,
+        query_embedding: EmbeddingVector,
+        top_k: int,
+    ) -> list[VectorSearchRecord]:
+        """Return the highest-similarity records for one query vector."""
 
     @abstractmethod
     def health_check(self) -> bool:

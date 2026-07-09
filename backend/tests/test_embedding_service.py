@@ -83,6 +83,16 @@ class EmbeddingServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result.total_chunks, 0)
         self.assertEqual(result.dimensions, 0)
 
+    async def test_embeds_single_text_for_retrieval(self) -> None:
+        provider = RecordingEmbeddingProvider()
+
+        vector = await EmbeddingService(provider).embed_text(
+            "What is Python?"
+        )
+
+        self.assertEqual(provider.received_texts, ["What is Python?"])
+        self.assertEqual(vector.values, [0.0, 1.0, 2.0])
+
 
 if __name__ == "__main__":
     unittest.main()

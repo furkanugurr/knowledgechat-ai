@@ -2,6 +2,12 @@
 
 from app.services.chat_service import ChatService
 from app.services.embedding_service import EmbeddingService
+from app.services.retrieval_service import RetrievalService
 from app.services.vector_store_service import VectorStoreService
 
-__all__ = ["ChatService", "EmbeddingService", "VectorStoreService"]
+__all__ = [
+    "ChatService",
+    "EmbeddingService",
+    "RetrievalService",
+    "VectorStoreService",
+]

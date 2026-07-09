@@ -13,6 +13,7 @@ from app.embedding.ollama_embedding import OllamaEmbeddingProvider
 from app.prompt.prompt_builder import PromptBuilder
 from app.providers.ollama_provider import OllamaProvider
 from app.services.embedding_service import EmbeddingService
+from app.services.retrieval_service import RetrievalService
 from app.services.vector_store_service import VectorStoreService
 from app.vectorstore.chroma_provider import ChromaVectorStoreProvider
 
@@ -41,14 +42,21 @@ def create_lifespan(
         await embedding_provider.start()
         application.state.llm_provider = provider
         application.state.prompt_builder = prompt_builder
-        application.state.embedding_service = EmbeddingService(
+        embedding_service = EmbeddingService(
             embedding_provider
         )
+        vector_store_provider = ChromaVectorStoreProvider(
+            persistence_path=settings.vector_db_path,
+            collection_name=settings.vector_collection_name,
+        )
+        application.state.embedding_service = embedding_service
         application.state.vector_store_service = VectorStoreService(
-            ChromaVectorStoreProvider(
-                persistence_path=settings.vector_db_path,
-                collection_name=settings.vector_collection_name,
-            )
+            vector_store_provider
+        )
+        application.state.retrieval_service = RetrievalService(
+            embedding_service=embedding_service,
+            vector_store_provider=vector_store_provider,
+            top_k=settings.retrieval_top_k,
         )
         try:
             yield

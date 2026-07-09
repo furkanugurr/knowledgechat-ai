@@ -3,10 +3,17 @@
 import unittest
 from collections.abc import Sequence
 
-from app.embedding.models import EmbeddedChunk, EmbeddingResult
+from app.embedding.models import (
+    EmbeddedChunk,
+    EmbeddingResult,
+    EmbeddingVector,
+)
 from app.knowledge.models import IndexResult, IndexStatistics
 from app.services.vector_store_service import VectorStoreService
-from app.vectorstore.models import VectorCollectionInfo
+from app.vectorstore.models import (
+    VectorCollectionInfo,
+    VectorSearchRecord,
+)
 from app.vectorstore.provider import VectorStoreProvider
 from test_chroma_vector_store import create_embedded_chunk
 
@@ -45,6 +52,13 @@ class RecordingVectorStoreProvider(VectorStoreProvider):
             collection_name="test-collection",
             record_count=self.record_count,
         )
+
+    def search(
+        self,
+        query_embedding: EmbeddingVector,
+        top_k: int,
+    ) -> list[VectorSearchRecord]:
+        return []
 
     def health_check(self) -> bool:
         return True
