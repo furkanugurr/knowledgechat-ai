@@ -6,8 +6,9 @@ generation through a provider-independent LLM interface. It can also generate
 embeddings for prepared knowledge chunks through a separate provider contract.
 Ollama is the current implementation for both contracts, and ChromaDB provides
 persistent local vector storage and cosine similarity retrieval. Retrieved
-knowledge now augments the existing chat prompt. Citations, memory, streaming,
-and conversation history are not included.
+knowledge now augments the existing chat prompt, and source metadata is
+returned as citations. Memory, streaming, and conversation history are not
+included.
 
 ## Structure
 
@@ -349,8 +350,29 @@ USER MESSAGE
 
 The default system prompt instructs the model to use provided context, avoid
 unsupported claims, and explicitly report when information is absent from the
-knowledge base. Retrieved sources are internal prompt inputs only; the API does
-not expose citations or source lists.
+knowledge base. `PromptBuilder` uses retrieved chunk text only as internal model
+context; citation response construction remains the responsibility of
+`ChatService`.
+
+## Citation Support
+
+Each successful RAG response includes source metadata derived from the
+retrieved chunks. Sources remain ordered by retrieval relevance. Duplicate
+entries with the same `relative_path`, `section_title`, and `chunk_index` are
+included only once.
+
+Each source contains:
+
+- `document_name`
+- `relative_path`
+- `section_title`
+- `chunk_index`
+- `similarity_score`
+- Optional `language`
+
+Chunk text is deliberately excluded from the public response. It may contain
+large knowledge-base passages and is needed only for internal prompt context.
+Embeddings are never exposed.
 
 ## Local Knowledge Indexing
 
@@ -422,17 +444,26 @@ curl -i http://localhost:8000/api/v1/chat \
   -d '{"message":"What does the knowledge base say about Python classes?"}'
 ```
 
-The success response schema remains:
+The success response includes citations:
 
 ```json
 {
-  "response": "..."
+  "response": "...",
+  "sources": [
+    {
+      "document_name": "oop.md",
+      "relative_path": "python/oop.md",
+      "section_title": "Classes",
+      "chunk_index": 2,
+      "similarity_score": 0.87,
+      "language": "en"
+    }
+  ]
 }
 ```
 
 Still intentionally excluded:
 
-- Citation fields and source lists
 - Frontend
 - Conversation memory
 - Streaming
@@ -469,7 +500,17 @@ curl -i http://localhost:8000/api/v1/chat \
 
 ```json
 {
-  "response": "Python is ..."
+  "response": "Python is ...",
+  "sources": [
+    {
+      "document_name": "variables.md",
+      "relative_path": "python/variables.md",
+      "section_title": "Variables",
+      "chunk_index": 0,
+      "similarity_score": 0.91,
+      "language": "en"
+    }
+  ]
 }
 ```
 
