@@ -25,6 +25,7 @@ from app.providers.base import (
     LLMProviderTimeoutError,
     LLMProviderUnavailableError,
 )
+from app.services.chat_service import ChatPromptError, ChatRetrievalError
 
 
 class SuccessfulChatService:
@@ -46,6 +47,20 @@ class TimedOutChatService:
 
     async def generate_response(self, message: str) -> str:
         raise LLMProviderTimeoutError
+
+
+class RetrievalFailedChatService:
+    """Chat service test double simulating retrieval failure."""
+
+    async def generate_response(self, message: str) -> str:
+        raise ChatRetrievalError
+
+
+class PromptFailedChatService:
+    """Chat service test double simulating prompt failure."""
+
+    async def generate_response(self, message: str) -> str:
+        raise ChatPromptError
 
 
 class ChatEndpointTests(unittest.TestCase):
@@ -104,6 +119,32 @@ class ChatEndpointTests(unittest.TestCase):
             )
 
         self.assertEqual(response.status_code, 422)
+
+    def test_retrieval_failure_is_safe(self) -> None:
+        with self.create_client(RetrievalFailedChatService()) as client:
+            response = client.post(
+                "/api/v1/chat",
+                json={"message": "Explain Python."},
+            )
+
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(
+            response.json(),
+            {"detail": "Knowledge retrieval service unavailable."},
+        )
+
+    def test_prompt_failure_is_safe(self) -> None:
+        with self.create_client(PromptFailedChatService()) as client:
+            response = client.post(
+                "/api/v1/chat",
+                json={"message": "Explain Python."},
+            )
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(
+            response.json(),
+            {"detail": "Unable to build the response prompt."},
+        )
 
 
 if __name__ == "__main__":

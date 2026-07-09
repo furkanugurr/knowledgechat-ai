@@ -5,7 +5,8 @@ currently supports service health reporting and stateless, single-turn response
 generation through a provider-independent LLM interface. It can also generate
 embeddings for prepared knowledge chunks through a separate provider contract.
 Ollama is the current implementation for both contracts, and ChromaDB provides
-persistent local vector storage and cosine similarity retrieval. RAG, memory,
+persistent local vector storage and cosine similarity retrieval. Retrieved
+knowledge now augments the existing chat prompt. Citations, memory, streaming,
 and conversation history are not included.
 
 ## Structure
@@ -33,20 +34,25 @@ backend/
 │   └── main.py         # FastAPI application factory and entry point
 ├── data/
 │   └── index_cache.json # Incremental knowledge index state
+├── scripts/
+│   └── index_knowledge.py # Local end-to-end indexing utility
 ├── tests/              # Backend test suite
 ├── .env.example        # Environment configuration template
 ├── Dockerfile          # Backend container definition
 └── requirements.txt    # Python runtime dependencies
 ```
 
-## Architecture
+## RAG Chat Architecture
 
-The HTTP and provider layers are separated by an application service:
+The router remains isolated from retrieval and provider details:
 
 ```text
 Chat Router
     ↓
 ChatService
+    ├──→ RetrievalService
+    │         ↓
+    │   Relevant chunks
     ├──→ PromptBuilder
     ↓
 LLMProvider
@@ -56,15 +62,19 @@ OllamaProvider
 Ollama HTTP API
 ```
 
-- The router validates HTTP input and maps provider errors to HTTP responses.
-- `ChatService` coordinates prompt construction and response generation.
+- The router validates HTTP input and calls only `ChatService`.
+- `ChatService` coordinates retrieval, prompt construction, and generation.
+- `RetrievalService` returns the most relevant indexed knowledge chunks.
 - `PromptBuilder` combines managed system and developer prompts with the user
-  message.
+  message and optional knowledge context.
 - `LLMProvider` defines the provider-independent generation and health contract.
 - `OllamaProvider` contains all Ollama-specific HTTP and response handling.
 
 Future providers can implement `LLMProvider` and be selected in the application
 composition root without changing the router, chat service, or prompt builder.
+
+If retrieval returns no chunks or the collection is empty, chat returns a safe
+knowledge-base fallback without calling the LLM.
 
 ## Knowledge Pipeline
 
@@ -160,12 +170,13 @@ supports the headings and fenced code blocks needed for meaningful technical
 knowledge segmentation. It also keeps knowledge review independent from a
 database or proprietary editor.
 
-### Future RAG Integration
+### RAG Integration
 
 The knowledge pipeline produces a validated `IndexResult`. The embedding layer
 can consume its changed chunks without altering loading, parsing, chunking,
-incremental detection, or reporting. Vector persistence and retrieval remain
-independent stages; retrieved context is not yet sent to an LLM prompt.
+incremental detection, or reporting. Retrieval uses the stored vectors, and
+`ChatService` passes the resulting chunks to `PromptBuilder` as internal
+knowledge context.
 
 ## Embedding Layer
 
@@ -200,11 +211,12 @@ This keeps filesystem processing deterministic and lets another embedding
 provider be introduced without changing the knowledge pipeline.
 
 The Ollama integration uses the native `/api/embed` batch endpoint. It does not
-persist vectors. A future Vector Store layer can consume
-`EmbeddingResult.embedded_chunks` and handle `IndexResult.removed_files`
+persist vectors. The Vector Store layer consumes
+`EmbeddingResult.embedded_chunks` and handles `IndexResult.removed_files`
 without changing either indexing or embedding generation.
 
-No vector search, retrieval, or RAG behavior is implemented.
+The embedding layer itself performs no vector search or retrieval; those
+responsibilities remain in their dedicated layers.
 
 ## Vector Store Layer
 
@@ -310,9 +322,55 @@ language
 to `5`. Empty collections, embedding failures, search failures, and malformed
 results have distinct retrieval exceptions.
 
-This layer prepares the project for RAG by producing validated context
-candidates. It does not modify prompts, call the chat model, or feed retrieved
-content into `ChatService`; therefore no RAG behavior exists yet.
+This layer supplies validated context candidates to the RAG chat flow. It still
+does not perform prompt construction or call the chat model directly.
+
+## RAG Prompt Context
+
+`PromptBuilder` preserves its original format when no context is provided. For
+RAG chat, it inserts a clearly separated section before the user message:
+
+```text
+SYSTEM PROMPT
+
+DEVELOPER PROMPT
+
+KNOWLEDGE CONTEXT
+## Knowledge Context
+
+### Source 1
+Document: python/oop.md
+Section: Classes
+Content:
+...
+
+USER MESSAGE
+```
+
+The default system prompt instructs the model to use provided context, avoid
+unsupported claims, and explicitly report when information is absent from the
+knowledge base. Retrieved sources are internal prompt inputs only; the API does
+not expose citations or source lists.
+
+## Local Knowledge Indexing
+
+Before testing RAG chat, place administrator-reviewed Markdown documents under
+`knowledge_base/`, then run the existing pipeline end to end:
+
+```bash
+cd backend
+python scripts/index_knowledge.py
+```
+
+The script:
+
+1. Loads and incrementally indexes repository Markdown.
+2. Generates embeddings with the configured Ollama embedding model.
+3. Upserts vectors and removes deleted documents in ChromaDB.
+4. Prints only files scanned/indexed, chunks embedded, and vectors stored.
+
+The orchestration core is importable and testable without starting Ollama or
+ChromaDB. No indexing API endpoint or admin panel is added.
 
 ## Run Locally
 
@@ -329,7 +387,8 @@ uvicorn app.main:app --reload
 
 ## Ollama
 
-Start Ollama and download the model configured by `CHAT_MODEL`:
+Ollama, the configured chat model, and the configured embedding model must be
+available locally:
 
 ```bash
 ollama serve
@@ -348,6 +407,36 @@ VECTOR_COLLECTION_NAME=knowledgechat
 RETRIEVAL_TOP_K=5
 REQUEST_TIMEOUT=60
 ```
+
+## Manual RAG Test
+
+1. Add at least one Markdown knowledge document beneath `knowledge_base/`.
+2. Start Ollama and ensure both configured models are available.
+3. Run `python scripts/index_knowledge.py` from `backend/`.
+4. Start the backend with `uvicorn app.main:app --reload`.
+5. Send a chat request:
+
+```bash
+curl -i http://localhost:8000/api/v1/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message":"What does the knowledge base say about Python classes?"}'
+```
+
+The success response schema remains:
+
+```json
+{
+  "response": "..."
+}
+```
+
+Still intentionally excluded:
+
+- Citation fields and source lists
+- Frontend
+- Conversation memory
+- Streaming
+- Reranking, hybrid search, and filtering
 
 ## Available Endpoints
 
