@@ -510,9 +510,9 @@ curl -i http://localhost:8000/api/v1/chat \
   "response": "Python is ...",
   "sources": [
     {
-      "document_name": "variables.md",
-      "relative_path": "python/variables.md",
-      "section_title": "Variables",
+      "document_name": "oop.md",
+      "relative_path": "python/oop.md",
+      "section_title": "Core Idea",
       "chunk_index": 0,
       "similarity_score": 0.91,
       "language": "en"
