@@ -334,8 +334,10 @@ language
 ```
 
 `RETRIEVAL_TOP_K` controls the maximum number of returned chunks and defaults
-to `5`. Empty collections, embedding failures, search failures, and malformed
-results have distinct retrieval exceptions.
+to `5`. `RETRIEVAL_MIN_SIMILARITY` controls the minimum similarity score
+required before a retrieved chunk can be used in the RAG prompt or returned as
+a citation. It defaults to `0.65`. Empty collections, embedding failures,
+search failures, and malformed results have distinct retrieval exceptions.
 
 This layer supplies validated context candidates to the RAG chat flow. It still
 does not perform prompt construction or call the chat model directly.
@@ -439,10 +441,12 @@ ENVIRONMENT=development
 API_V1_PREFIX=/api/v1
 OLLAMA_HOST=http://localhost:11434
 CHAT_MODEL=gemma3
+CHAT_MAX_TOKENS=768
 EMBEDDING_MODEL=nomic-embed-text
 VECTOR_DB_PATH=./data/chroma
 VECTOR_COLLECTION_NAME=knowledgechat
 RETRIEVAL_TOP_K=5
+RETRIEVAL_MIN_SIMILARITY=0.65
 REQUEST_TIMEOUT=60
 CORS_ORIGINS=http://localhost:5173
 ```

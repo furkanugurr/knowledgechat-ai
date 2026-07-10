@@ -91,6 +91,20 @@ class PromptBuilderTests(unittest.TestCase):
         )
         self.assertIn("If the user asks in Turkish, answer in Turkish.", prompt)
 
+    def test_default_prompt_requires_a_grounded_detailed_answer(self) -> None:
+        prompt = PromptBuilder.from_defaults().build("Antikor nedir?")
+
+        self.assertIn(
+            "Answer the user's question yourself by synthesizing",
+            prompt,
+        )
+        self.assertIn("2 to 4 focused paragraphs", prompt)
+        self.assertIn("Do not invent missing details", prompt)
+        self.assertIn(
+            "Prefer a direct explanation followed by relevant details",
+            prompt,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

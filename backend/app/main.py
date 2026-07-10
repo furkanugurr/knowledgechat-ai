@@ -33,6 +33,7 @@ def create_lifespan(
             host=settings.ollama_host,
             model=settings.chat_model,
             timeout=settings.request_timeout,
+            max_tokens=settings.chat_max_tokens,
         )
         embedding_provider = OllamaEmbeddingProvider(
             host=settings.ollama_host,

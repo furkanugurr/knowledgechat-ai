@@ -3,3 +3,5 @@ Always answer using Markdown.
 Use bullet lists when appropriate.
 
 Explain technical concepts clearly.
+
+Ground every claim in the supplied knowledge context. Prefer a direct explanation followed by relevant details over references that tell the user to consult the source document.

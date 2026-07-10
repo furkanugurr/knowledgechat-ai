@@ -109,10 +109,12 @@ Important backend variables:
 | `API_V1_PREFIX` | API route prefix | `/api/v1` |
 | `OLLAMA_HOST` | Ollama HTTP API | `http://localhost:11434` |
 | `CHAT_MODEL` | Chat generation model | `gemma3` |
+| `CHAT_MAX_TOKENS` | Maximum tokens generated for a chat answer | `768` |
 | `EMBEDDING_MODEL` | Embedding model | `nomic-embed-text` |
 | `VECTOR_DB_PATH` | Persistent ChromaDB path | `./data/chroma` |
 | `VECTOR_COLLECTION_NAME` | Chroma collection | `knowledgechat` |
 | `RETRIEVAL_TOP_K` | Maximum retrieved chunks | `5` |
+| `RETRIEVAL_MIN_SIMILARITY` | Minimum similarity required for RAG context and sources | `0.65` |
 | `REQUEST_TIMEOUT` | Ollama timeout in seconds | `60` |
 | `CORS_ORIGINS` | Comma-separated browser origins | `http://localhost:5173` |
 

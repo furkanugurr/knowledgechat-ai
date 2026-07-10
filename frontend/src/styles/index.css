@@ -60,4 +60,16 @@
   .markdown-content pre code {
     @apply bg-transparent p-0 text-inherit;
   }
+
+  .source-disclosure > summary {
+    list-style: none;
+  }
+
+  .source-disclosure > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .source-disclosure[open] .source-chevron {
+    transform: rotate(180deg);
+  }
 }
