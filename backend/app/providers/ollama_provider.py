@@ -18,10 +18,19 @@ logger = logging.getLogger(__name__)
 class OllamaProvider(LLMProvider):
     """Generate responses through the asynchronous Ollama HTTP API."""
 
-    def __init__(self, host: str, model: str, timeout: float) -> None:
+    def __init__(
+        self,
+        host: str,
+        model: str,
+        timeout: float,
+        max_tokens: int,
+        transport: httpx.AsyncBaseTransport | None = None,
+    ) -> None:
         self._host = host.rstrip("/")
         self._model = model
         self._timeout = timeout
+        self._max_tokens = max_tokens
+        self._transport = transport
         self._client: httpx.AsyncClient | None = None
 
     async def start(self) -> None:
@@ -30,6 +39,7 @@ class OllamaProvider(LLMProvider):
             self._client = httpx.AsyncClient(
                 base_url=self._host,
                 timeout=self._timeout,
+                transport=self._transport,
             )
 
     async def close(self) -> None:
@@ -51,6 +61,9 @@ class OllamaProvider(LLMProvider):
                     "model": self._model,
                     "prompt": prompt,
                     "stream": False,
+                    "options": {
+                        "num_predict": self._max_tokens,
+                    },
                 },
             )
             response.raise_for_status()

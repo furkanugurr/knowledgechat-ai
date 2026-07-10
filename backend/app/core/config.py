@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     log_level: str = Field(validation_alias="LOG_LEVEL")
     ollama_host: str = Field(validation_alias="OLLAMA_HOST")
     chat_model: str = Field(validation_alias="CHAT_MODEL")
+    chat_max_tokens: int = Field(
+        default=768,
+        validation_alias="CHAT_MAX_TOKENS",
+        ge=128,
+    )
     embedding_model: str = Field(validation_alias="EMBEDDING_MODEL")
     vector_db_path: Path = Field(validation_alias="VECTOR_DB_PATH")
     vector_collection_name: str = Field(
@@ -34,6 +39,12 @@ class Settings(BaseSettings):
         default=5,
         validation_alias="RETRIEVAL_TOP_K",
         ge=1,
+    )
+    retrieval_min_similarity: float = Field(
+        default=0.65,
+        validation_alias="RETRIEVAL_MIN_SIMILARITY",
+        ge=0,
+        le=1,
     )
     request_timeout: float = Field(
         validation_alias="REQUEST_TIMEOUT",

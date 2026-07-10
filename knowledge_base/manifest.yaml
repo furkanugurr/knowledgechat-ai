@@ -1,5 +1,5 @@
 version: 2
-default_language: en
+default_language: tr
 chunk_size: 1200
 chunk_overlap: 150
 supported_extensions:

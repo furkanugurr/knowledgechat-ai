@@ -10,6 +10,7 @@ from app.retrieval.retriever import (
     RetrievalSearchError,
 )
 from app.services.chat_service import (
+    GREETING_RESPONSE,
     NO_RELEVANT_CONTEXT_RESPONSE,
     ChatPromptError,
     ChatRetrievalError,
@@ -107,6 +108,24 @@ def create_retrieved_chunk(
 class ChatServiceTests(unittest.IsolatedAsyncioTestCase):
     """Verify RAG orchestration without external providers."""
 
+    async def test_greeting_returns_friendly_response_without_retrieval(
+        self,
+    ) -> None:
+        provider = RecordingProvider()
+        retrieval_service = RetrievalServiceDouble()
+        service = ChatService(
+            provider=provider,
+            prompt_builder=RecordingPromptBuilder(),  # type: ignore[arg-type]
+            retrieval_service=retrieval_service,
+        )
+
+        response = await service.generate_response("merhaba")
+
+        self.assertEqual(response.response, GREETING_RESPONSE)
+        self.assertEqual(response.sources, [])
+        self.assertIsNone(retrieval_service.received_question)
+        self.assertIsNone(provider.received_prompt)
+
     async def test_retrieves_context_builds_prompt_and_calls_llm(self) -> None:
         provider = RecordingProvider()
         prompt_builder = RecordingPromptBuilder()
@@ -159,6 +178,56 @@ class ChatServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.response, NO_RELEVANT_CONTEXT_RESPONSE)
         self.assertEqual(response.sources, [])
         self.assertIsNone(provider.received_prompt)
+
+    async def test_filters_out_low_similarity_retrieval_results(self) -> None:
+        provider = RecordingProvider()
+        prompt_builder = RecordingPromptBuilder()
+        low_similarity_chunk = create_retrieved_chunk(similarity_score=0.5)
+        service = ChatService(
+            provider=provider,
+            prompt_builder=prompt_builder,  # type: ignore[arg-type]
+            retrieval_service=RetrievalServiceDouble(
+                result=create_retrieval_result([low_similarity_chunk])
+            ),
+            retrieval_min_similarity=0.65,
+        )
+
+        response = await service.generate_response("Unrelated question")
+
+        self.assertEqual(response.response, NO_RELEVANT_CONTEXT_RESPONSE)
+        self.assertEqual(response.sources, [])
+        self.assertIsNone(provider.received_prompt)
+        self.assertIsNone(prompt_builder.received_context)
+
+    async def test_uses_only_chunks_meeting_similarity_threshold(self) -> None:
+        provider = RecordingProvider()
+        prompt_builder = RecordingPromptBuilder()
+        low_similarity_chunk = create_retrieved_chunk(
+            similarity_score=0.5,
+            document_name="low.md",
+            relative_path="python/low.md",
+            section_title="Low",
+        )
+        relevant_chunk = create_retrieved_chunk(similarity_score=0.9)
+        service = ChatService(
+            provider=provider,
+            prompt_builder=prompt_builder,  # type: ignore[arg-type]
+            retrieval_service=RetrievalServiceDouble(
+                result=create_retrieval_result(
+                    [relevant_chunk, low_similarity_chunk]
+                )
+            ),
+            retrieval_min_similarity=0.65,
+        )
+
+        response = await service.generate_response("Explain classes.")
+
+        self.assertEqual(response.response, "Generated response")
+        self.assertEqual(prompt_builder.received_context, [relevant_chunk])
+        self.assertEqual(len(response.sources), 1)
+        self.assertEqual(response.sources[0].relative_path, "python/oop.md")
+        self.assertEqual(response.sources[0].similarity_score, 0.9)
+        self.assertEqual(provider.received_prompt, "Final RAG prompt")
 
     async def test_returns_safe_answer_for_empty_collection(self) -> None:
         provider = RecordingProvider()

@@ -12,6 +12,7 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
       CHAT_MODEL: ${CHAT_MODEL:-gemma3}
+      CHAT_MAX_TOKENS: ${CHAT_MAX_TOKENS:-768}
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-nomic-embed-text}
       VECTOR_DB_PATH: /workspace/backend/data/chroma
       VECTOR_COLLECTION_NAME: ${VECTOR_COLLECTION_NAME:-knowledgechat}

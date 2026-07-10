@@ -9,6 +9,7 @@ interface MessageBubbleProps {
 
 export function MessageBubble({ message }: MessageBubbleProps) {
   const isUser = message.role === "user";
+  const assistantContent = message.content.trim();
 
   return (
     <article
@@ -32,9 +33,21 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           <p className="whitespace-pre-wrap leading-7">{message.content}</p>
         ) : (
           <>
-            <div className="markdown-content">
-              <ReactMarkdown>{message.content}</ReactMarkdown>
-            </div>
+            {assistantContent ? (
+              <div
+                className="markdown-content break-words text-slate-700"
+                data-testid="assistant-response"
+              >
+                <ReactMarkdown>{assistantContent}</ReactMarkdown>
+              </div>
+            ) : (
+              <p
+                className="leading-7 text-slate-500"
+                data-testid="assistant-response"
+              >
+                No answer text was returned.
+              </p>
+            )}
             <SourceList sources={message.sources ?? []} />
           </>
         )}

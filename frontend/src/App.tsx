@@ -32,12 +32,12 @@ export default function App() {
     setIsLoading(true);
 
     try {
-      const response = await sendChatMessage({ message: content });
+      const data = await sendChatMessage({ message: content });
       const assistantMessage: ChatMessage = {
         id: createMessageId(),
         role: "assistant",
-        content: response.response,
-        sources: response.sources,
+        content: data.response,
+        sources: data.sources,
       };
       setMessages((currentMessages) => [
         ...currentMessages,
