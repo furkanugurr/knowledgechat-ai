@@ -17,7 +17,7 @@ Keep this terminal running.
 ## 2. Pull the Models
 
 ```bash
-ollama pull gemma3
+ollama pull gemma3:12b
 ollama pull nomic-embed-text
 ```
 

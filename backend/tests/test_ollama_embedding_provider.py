@@ -61,6 +61,32 @@ class OllamaEmbeddingProviderTests(unittest.IsolatedAsyncioTestCase):
         finally:
             await provider.close()
 
+    async def test_splits_large_requests_into_batches(self) -> None:
+        batch_sizes: list[int] = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            payload = json.loads(request.content)
+            batch_sizes.append(len(payload["input"]))
+            return httpx.Response(
+                200,
+                json={"embeddings": [[0.1, 0.2]] * len(payload["input"])},
+            )
+
+        provider = OllamaEmbeddingProvider(
+            host="http://ollama.test",
+            model="configured-model",
+            timeout=1,
+            transport=httpx.MockTransport(handler),
+        )
+        await provider.start()
+        try:
+            vectors = await provider.generate_embeddings(["Text"] * 65)
+        finally:
+            await provider.close()
+
+        self.assertEqual(batch_sizes, [32, 32, 1])
+        self.assertEqual(len(vectors), 65)
+
     async def test_maps_connection_failure_to_unavailable_error(self) -> None:
         def handler(request: httpx.Request) -> httpx.Response:
             raise httpx.ConnectError("unavailable", request=request)

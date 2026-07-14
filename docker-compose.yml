@@ -11,7 +11,7 @@ services:
       API_V1_PREFIX: ${API_V1_PREFIX:-/api/v1}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
-      CHAT_MODEL: ${CHAT_MODEL:-gemma3}
+      CHAT_MODEL: ${CHAT_MODEL:-gemma3:12b}
       CHAT_MAX_TOKENS: ${CHAT_MAX_TOKENS:-768}
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-nomic-embed-text}
       VECTOR_DB_PATH: /workspace/backend/data/chroma

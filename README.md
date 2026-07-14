@@ -72,7 +72,7 @@ Start Ollama and pull the configured chat and embedding models:
 
 ```bash
 ollama serve
-ollama pull gemma3
+ollama pull gemma3:12b
 ollama pull nomic-embed-text
 ```
 
@@ -108,7 +108,7 @@ Important backend variables:
 | `ENVIRONMENT` | Runtime environment label | `development` |
 | `API_V1_PREFIX` | API route prefix | `/api/v1` |
 | `OLLAMA_HOST` | Ollama HTTP API | `http://localhost:11434` |
-| `CHAT_MODEL` | Chat generation model | `gemma3` |
+| `CHAT_MODEL` | Chat generation model | `gemma3:12b` |
 | `CHAT_MAX_TOKENS` | Maximum tokens generated for a chat answer | `768` |
 | `EMBEDDING_MODEL` | Embedding model | `nomic-embed-text` |
 | `VECTOR_DB_PATH` | Persistent ChromaDB path | `./data/chroma` |
