@@ -273,6 +273,24 @@ class ChromaVectorStoreTests(unittest.TestCase):
             records[1].similarity_score,
         )
 
+    def test_search_document_returns_only_requested_source(self) -> None:
+        provider = self.create_provider()
+        provider.upsert_embeddings(
+            [
+                create_embedded_chunk("guides/nat.md", "NAT", values=[1.0, 0.0, 0.0]),
+                create_embedded_chunk("guides/vpn.md", "VPN", values=[0.0, 1.0, 0.0]),
+            ]
+        )
+
+        records = provider.search_document(
+            EmbeddingVector(values=[1.0, 0.0, 0.0]),
+            "guides/nat.md",
+            top_k=5,
+        )
+
+        self.assertEqual(1, len(records))
+        self.assertEqual("guides/nat.md", records[0].metadata["relative_path"])
+
     def test_search_rejects_empty_collection(self) -> None:
         provider = self.create_provider()
 

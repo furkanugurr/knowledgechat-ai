@@ -188,6 +188,40 @@ class ChromaVectorStoreProvider(VectorStoreProvider):
                 f"{self._collection_name}"
             ) from exc
 
+    def search_document(
+        self,
+        query_embedding: EmbeddingVector,
+        relative_path: str,
+        top_k: int,
+    ) -> list[VectorSearchRecord]:
+        """Search within one document without changing persisted data."""
+        if not relative_path.strip():
+            raise ValueError("relative_path cannot be empty")
+        if top_k <= 0:
+            raise ValueError("top_k must be greater than zero")
+        collection = self._require_collection()
+        try:
+            matching = collection.get(
+                where={"relative_path": relative_path},
+                include=[],
+            )
+            count = len(matching.get("ids", []))
+            if count == 0:
+                return []
+            result = collection.query(
+                query_embeddings=[query_embedding.values],
+                n_results=min(top_k, count),
+                where={"relative_path": relative_path},
+                include=["documents", "metadatas", "distances"],
+            )
+            return self._parse_search_result(result)
+        except InvalidVectorSearchResultError:
+            raise
+        except Exception as exc:
+            raise VectorSearchError(
+                f"Unable to search document in collection: {relative_path}"
+            ) from exc
+
     def health_check(self) -> bool:
         """Return whether the persistent Chroma client is operational."""
         try:

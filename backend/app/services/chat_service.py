@@ -8,6 +8,7 @@ from typing import Protocol
 from app.prompt.prompt_builder import PromptBuilder
 from app.providers.base import LLMProvider
 from app.retrieval.models import RetrievalResult, RetrievedChunk
+from app.retrieval.intent import IntentClassifier, QuestionIntent
 from app.retrieval.retriever import (
     EmptyCollectionError,
     RetrievalError,
@@ -89,14 +90,13 @@ class ChatService:
             "Retrieval completed retrieved_chunks=%d",
             retrieval_result.total_results,
         )
-        relevant_chunks = self._filter_relevant_chunks(
+        relevant_chunks = (
             retrieval_result.chunks
+            if IntentClassifier.classify(user_message) == QuestionIntent.COMPARISON
+            else self._focus_context(user_message, retrieval_result.chunks)
         )
-        relevant_chunks = self._focus_context(user_message, relevant_chunks)
         logger.info(
-            "Retrieval relevance filter applied min_similarity=%.3f "
-            "relevant_chunks=%d",
-            self._retrieval_min_similarity,
+            "Final retrieval context accepted relevant_chunks=%d",
             len(relevant_chunks),
         )
 

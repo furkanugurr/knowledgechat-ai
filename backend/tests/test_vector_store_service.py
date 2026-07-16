@@ -60,6 +60,14 @@ class RecordingVectorStoreProvider(VectorStoreProvider):
     ) -> list[VectorSearchRecord]:
         return []
 
+    def search_document(
+        self,
+        query_embedding: EmbeddingVector,
+        relative_path: str,
+        top_k: int,
+    ) -> list[VectorSearchRecord]:
+        return []
+
     def health_check(self) -> bool:
         return True
 

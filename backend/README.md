@@ -333,8 +333,9 @@ chunk_index
 language
 ```
 
-`RETRIEVAL_TOP_K` controls the maximum number of returned chunks and defaults
-to `5`. `RETRIEVAL_MIN_SIMILARITY` controls the minimum similarity score
+`RETRIEVAL_CANDIDATE_K` controls the semantic candidate pool and defaults to
+`30`. `CHAT_CONTEXT_MAX_CHUNKS` limits the final reranked prompt context and
+defaults to `5`. `RETRIEVAL_MIN_SIMILARITY` controls the minimum similarity score
 required before a retrieved chunk can be used in the RAG prompt or returned as
 a citation. It defaults to `0.65`. Empty collections, embedding failures,
 search failures, and malformed results have distinct retrieval exceptions.
@@ -445,7 +446,8 @@ CHAT_MAX_TOKENS=768
 EMBEDDING_MODEL=nomic-embed-text
 VECTOR_DB_PATH=./data/chroma
 VECTOR_COLLECTION_NAME=knowledgechat
-RETRIEVAL_TOP_K=5
+RETRIEVAL_CANDIDATE_K=30
+CHAT_CONTEXT_MAX_CHUNKS=5
 RETRIEVAL_MIN_SIMILARITY=0.65
 REQUEST_TIMEOUT=60
 CORS_ORIGINS=http://localhost:5173

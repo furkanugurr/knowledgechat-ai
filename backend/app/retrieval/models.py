@@ -32,9 +32,4 @@ class RetrievalResult(BaseModel):
             )
         if self.total_results > self.top_k:
             raise ValueError("total_results cannot exceed top_k")
-        scores = [chunk.similarity_score for chunk in self.chunks]
-        if scores != sorted(scores, reverse=True):
-            raise ValueError(
-                "retrieved chunks must be sorted by similarity"
-            )
         return self

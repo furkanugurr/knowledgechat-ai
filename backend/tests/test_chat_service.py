@@ -180,7 +180,7 @@ class ChatServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.sources, [])
         self.assertIsNone(provider.received_prompt)
 
-    async def test_filters_out_low_similarity_retrieval_results(self) -> None:
+    async def test_trusts_final_context_selected_by_retrieval_service(self) -> None:
         provider = RecordingProvider()
         prompt_builder = RecordingPromptBuilder()
         low_similarity_chunk = create_retrieved_chunk(similarity_score=0.5)
@@ -195,10 +195,9 @@ class ChatServiceTests(unittest.IsolatedAsyncioTestCase):
 
         response = await service.generate_response("Unrelated question")
 
-        self.assertEqual(response.response, NO_RELEVANT_CONTEXT_RESPONSE)
-        self.assertEqual(response.sources, [])
-        self.assertIsNone(provider.received_prompt)
-        self.assertIsNone(prompt_builder.received_context)
+        self.assertEqual(response.response, "Generated response")
+        self.assertEqual(response.sources[0].relative_path, "python/oop.md")
+        self.assertEqual(prompt_builder.received_context, [low_similarity_chunk])
 
     async def test_uses_only_chunks_meeting_similarity_threshold(self) -> None:
         provider = RecordingProvider()

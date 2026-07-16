@@ -14,6 +14,8 @@ First determine whether the context explicitly contains the requested procedure,
 
 When the exact procedure is explicitly supported, begin with a direct answer and provide the supported steps in detail. Preserve detailed answers for sufficient evidence; brevity is required only when evidence is insufficient or partial.
 
+A directly relevant section titled "Kullanım adımları" is explicit procedural evidence. Never say that steps are unavailable when such a section is present; answer from those steps in source order.
+
 Treat explicit action sentences and ordered action sequences inside a menu-path section as procedural evidence even when a section named "Kullanım adımları" is not present in the supplied chunks.
 
 A menu path containing arrows such as "->" and action verbs is an explicit workflow. When it directly matches the question, enumerate those supported actions and do not claim that the procedure is unavailable.

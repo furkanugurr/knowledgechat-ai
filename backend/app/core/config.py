@@ -35,9 +35,14 @@ class Settings(BaseSettings):
     vector_collection_name: str = Field(
         validation_alias="VECTOR_COLLECTION_NAME"
     )
-    retrieval_top_k: int = Field(
+    retrieval_candidate_k: int = Field(
+        default=30,
+        validation_alias="RETRIEVAL_CANDIDATE_K",
+        ge=1,
+    )
+    chat_context_max_chunks: int = Field(
         default=5,
-        validation_alias="RETRIEVAL_TOP_K",
+        validation_alias="CHAT_CONTEXT_MAX_CHUNKS",
         ge=1,
     )
     retrieval_min_similarity: float = Field(
