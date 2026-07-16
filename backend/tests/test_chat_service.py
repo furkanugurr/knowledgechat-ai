@@ -92,10 +92,11 @@ def create_retrieved_chunk(
     section_title: str = "Classes",
     chunk_index: int = 0,
     language: str = "en",
+    chunk_text: str = "Classes define object behavior.",
 ) -> RetrievedChunk:
     """Create one retrieved knowledge chunk."""
     return RetrievedChunk(
-        chunk_text="Classes define object behavior.",
+        chunk_text=chunk_text,
         similarity_score=similarity_score,
         document_name=document_name,
         relative_path=relative_path,
@@ -228,6 +229,171 @@ class ChatServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.sources[0].relative_path, "python/oop.md")
         self.assertEqual(response.sources[0].similarity_score, 0.9)
         self.assertEqual(provider.received_prompt, "Final RAG prompt")
+
+    async def test_focuses_exact_unavailable_procedure_on_dominant_page(self) -> None:
+        provider = RecordingProvider()
+        prompt_builder = RecordingPromptBuilder()
+        direct = create_retrieved_chunk(
+            document_name="dinamik-nat.md",
+            relative_path="guides/antikor_v2/nat/dinamik-nat.md",
+            section_title="Dinamik NAT",
+            chunk_text="Dinamik NAT yapılandırma alanları gösterilir.",
+        )
+        adjacent = create_retrieved_chunk(
+            similarity_score=0.88,
+            document_name="sdwan.md",
+            relative_path="sdwan.md",
+            section_title="NAT Arkasından Çalışma",
+            chunk_text="SDWAN tünelleri NAT arkasında çalışabilir.",
+        )
+        service = ChatService(
+            provider=provider,
+            prompt_builder=prompt_builder,  # type: ignore[arg-type]
+            retrieval_service=RetrievalServiceDouble(
+                result=create_retrieval_result([direct, adjacent])
+            ),
+        )
+
+        response = await service.generate_response("Dinamik NAT nasıl oluşturulur?")
+
+        self.assertEqual(prompt_builder.received_context, [direct])
+        self.assertEqual(
+            [source.relative_path for source in response.sources],
+            ["guides/antikor_v2/nat/dinamik-nat.md"],
+        )
+
+    async def test_button_question_does_not_mix_cross_page_controls(self) -> None:
+        prompt_builder = RecordingPromptBuilder()
+        rules = create_retrieved_chunk(
+            document_name="guvenlik-kurallari.md",
+            relative_path="guides/antikor_v2/guvenlik_kurallari/guvenlik-kurallari.md",
+            section_title="Güvenlik Kuralları",
+            chunk_text="Güvenlik Kuralları ekranında Kaydet kontrolü görünür.",
+        )
+        vpn = create_retrieved_chunk(
+            similarity_score=0.85,
+            document_name="vpn.md",
+            relative_path="guides/vpn.md",
+            section_title="VPN",
+            chunk_text="VPN ekranında Kaydet butonu bağlantıyı kaydeder.",
+        )
+        service = ChatService(
+            provider=RecordingProvider(),
+            prompt_builder=prompt_builder,  # type: ignore[arg-type]
+            retrieval_service=RetrievalServiceDouble(
+                result=create_retrieval_result([rules, vpn])
+            ),
+        )
+
+        response = await service.generate_response(
+            "Güvenlik kurallarında Kaydet butonu ne zaman kullanılır?"
+        )
+
+        self.assertEqual(prompt_builder.received_context, [rules])
+        self.assertEqual(len(response.sources), 1)
+
+    async def test_sufficient_procedure_keeps_detailed_same_page_chunks(self) -> None:
+        prompt_builder = RecordingPromptBuilder()
+        first = create_retrieved_chunk(
+            document_name="ppp.md",
+            relative_path="guides/ppp.md",
+            section_title="Kullanım adımları",
+            chunk_text="Sanal Ethernet PPP için Ekle düğmesine tıklayın.",
+        )
+        second = create_retrieved_chunk(
+            similarity_score=0.88,
+            document_name="ppp.md",
+            relative_path="guides/ppp.md",
+            section_title="Alanlar",
+            chunk_index=1,
+            chunk_text="PPP Modem Arayüzü ve Plan alanlarını doldurun.",
+        )
+        unrelated = create_retrieved_chunk(
+            similarity_score=0.8,
+            document_name="ethernet.md",
+            relative_path="guides/ethernet.md",
+            section_title="Ethernet",
+            chunk_text="Ethernet durumunu gösterir.",
+        )
+        service = ChatService(
+            provider=RecordingProvider(),
+            prompt_builder=prompt_builder,  # type: ignore[arg-type]
+            retrieval_service=RetrievalServiceDouble(
+                result=create_retrieval_result([first, second, unrelated])
+            ),
+        )
+
+        response = await service.generate_response("Sanal Ethernet PPP ayarı nasıl yapılır?")
+
+        self.assertEqual(prompt_builder.received_context, [first, second])
+        self.assertEqual(len(response.sources), 2)
+
+    async def test_prefers_exact_document_over_adjacent_longer_title(self) -> None:
+        prompt_builder = RecordingPromptBuilder()
+        exact = create_retrieved_chunk(
+            similarity_score=0.90,
+            document_name="ssl-vpn-ayarlari.md",
+            relative_path="guides/ssl-vpn-ayarlari.md",
+            section_title="Kapsam",
+            chunk_text="SSL VPN için WAN IP ve VPN ağı ayarları bulunur.",
+        )
+        adjacent = create_retrieved_chunk(
+            similarity_score=0.94,
+            document_name="istemcisiz-ssl-web-vpn-ayarlari.md",
+            relative_path="guides/istemcisiz-ssl-web-vpn-ayarlari.md",
+            section_title="Kapsam",
+            chunk_text="İstemcisiz SSL Web VPN portal ayarları bulunur.",
+        )
+        service = ChatService(
+            provider=RecordingProvider(),
+            prompt_builder=prompt_builder,  # type: ignore[arg-type]
+            retrieval_service=RetrievalServiceDouble(
+                result=create_retrieval_result([adjacent, exact])
+            ),
+        )
+
+        response = await service.generate_response("SSL VPN ayarları nasıl yapılandırılır?")
+
+        self.assertEqual(prompt_builder.received_context, [exact])
+        self.assertEqual(response.sources[0].relative_path, exact.relative_path)
+
+    async def test_focused_chunks_follow_source_order(self) -> None:
+        prompt_builder = RecordingPromptBuilder()
+        continuation = create_retrieved_chunk(
+            similarity_score=0.95,
+            document_name="ppp.md",
+            relative_path="guides/ppp.md",
+            section_title="Menü yolu",
+            chunk_index=2,
+            chunk_text="Devam eden işlem dizisi.",
+        )
+        beginning = create_retrieved_chunk(
+            similarity_score=0.90,
+            document_name="ppp.md",
+            relative_path="guides/ppp.md",
+            section_title="Menü yolu",
+            chunk_index=1,
+            chunk_text="Sanal Ethernet PPP başlangıç işlemi.",
+        )
+        unrelated = create_retrieved_chunk(
+            similarity_score=0.85,
+            document_name="nat.md",
+            relative_path="guides/nat.md",
+            section_title="NAT",
+            chunk_text="NAT bilgisi.",
+        )
+        service = ChatService(
+            provider=RecordingProvider(),
+            prompt_builder=prompt_builder,  # type: ignore[arg-type]
+            retrieval_service=RetrievalServiceDouble(
+                result=create_retrieval_result([continuation, beginning, unrelated])
+            ),
+        )
+
+        response = await service.generate_response("Sanal Ethernet PPP nasıl yapılır?")
+
+        self.assertEqual(prompt_builder.received_context, [beginning, continuation])
+        self.assertEqual([item.chunk_index for item in response.sources], [1, 2])
 
     async def test_returns_safe_answer_for_empty_collection(self) -> None:
         provider = RecordingProvider()

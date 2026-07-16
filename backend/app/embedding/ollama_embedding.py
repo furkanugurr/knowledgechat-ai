@@ -21,6 +21,8 @@ logger = logging.getLogger(__name__)
 class OllamaEmbeddingProvider(EmbeddingProvider):
     """Generate embeddings through Ollama's asynchronous HTTP API."""
 
+    _BATCH_SIZE = 32
+
     def __init__(
         self,
         host: str,
@@ -58,15 +60,19 @@ class OllamaEmbeddingProvider(EmbeddingProvider):
             return []
 
         client = self._require_client()
+        vectors: list[EmbeddingVector] = []
         try:
-            response = await client.post(
-                "/api/embed",
-                json={
-                    "model": self._model,
-                    "input": list(texts),
-                },
-            )
-            response.raise_for_status()
+            for start in range(0, len(texts), self._BATCH_SIZE):
+                batch = list(texts[start : start + self._BATCH_SIZE])
+                response = await client.post(
+                    "/api/embed",
+                    json={
+                        "model": self._model,
+                        "input": batch,
+                    },
+                )
+                response.raise_for_status()
+                vectors.extend(self._extract_vectors(response.json(), len(batch)))
         except httpx.TimeoutException as exc:
             logger.error(
                 "Embedding provider timed out provider=ollama model=%s",
@@ -84,9 +90,6 @@ class OllamaEmbeddingProvider(EmbeddingProvider):
                 "Ollama embedding service unavailable."
             ) from exc
 
-        try:
-            payload = response.json()
-            return self._extract_vectors(payload, len(texts))
         except (ValueError, EmbeddingProviderInvalidResponseError) as exc:
             logger.error(
                 "Embedding provider returned invalid data "
@@ -96,6 +99,8 @@ class OllamaEmbeddingProvider(EmbeddingProvider):
             raise EmbeddingProviderInvalidResponseError(
                 "Ollama returned an invalid embedding response."
             ) from exc
+
+        return vectors
 
     async def health_check(self) -> bool:
         """Return whether the Ollama HTTP API is reachable."""

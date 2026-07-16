@@ -430,7 +430,7 @@ available locally:
 
 ```bash
 ollama serve
-ollama pull gemma3
+ollama pull gemma3:12b
 ollama pull nomic-embed-text
 ```
 
@@ -440,7 +440,7 @@ Configure `.env` with the local Ollama API, selected model, and request timeout:
 ENVIRONMENT=development
 API_V1_PREFIX=/api/v1
 OLLAMA_HOST=http://localhost:11434
-CHAT_MODEL=gemma3
+CHAT_MODEL=gemma3:12b
 CHAT_MAX_TOKENS=768
 EMBEDDING_MODEL=nomic-embed-text
 VECTOR_DB_PATH=./data/chroma

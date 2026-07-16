@@ -20,9 +20,13 @@ pnpm-debug.log*
 
 # Virtual environments
 .venv/
+tools/visual_guide_extractor/.venv/
 venv/
 env/
 ENV/
+
+# Visual guide extraction work products
+work/visual_guide_extraction/
 
 # IDE and editor files
 .idea/
