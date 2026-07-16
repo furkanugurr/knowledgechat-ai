@@ -1,6 +1,7 @@
 """Provider-independent chat application service."""
 
 import logging
+import re
 from time import perf_counter
 from typing import Protocol
 
@@ -91,6 +92,7 @@ class ChatService:
         relevant_chunks = self._filter_relevant_chunks(
             retrieval_result.chunks
         )
+        relevant_chunks = self._focus_context(user_message, relevant_chunks)
         logger.info(
             "Retrieval relevance filter applied min_similarity=%.3f "
             "relevant_chunks=%d",
@@ -163,6 +165,106 @@ class ChatService:
             for chunk in chunks
             if chunk.similarity_score >= self._retrieval_min_similarity
         ]
+
+    @classmethod
+    def _focus_context(
+        cls,
+        question: str,
+        chunks: list[RetrievedChunk],
+    ) -> list[RetrievedChunk]:
+        """Prefer the single document most directly matching the question."""
+        if len(chunks) < 2:
+            return chunks
+        question_tokens = cls._focus_tokens(question)
+        if not question_tokens:
+            return chunks
+        scores: dict[str, float] = {}
+        procedural_question = any(
+            marker in question.casefold()
+            for marker in (
+                "nasıl", "oluştur", "ekle", "yapılandır", "tanımla",
+                "ne zaman", "nereden", "ayar",
+            )
+        )
+        for chunk in chunks:
+            searchable = " ".join(
+                (
+                    chunk.document_name,
+                    chunk.relative_path,
+                    chunk.section_title or "",
+                    chunk.chunk_text,
+                )
+            )
+            context_tokens = cls._focus_tokens(searchable)
+            overlap = sum(
+                any(cls._tokens_match(token, candidate) for candidate in context_tokens)
+                for token in question_tokens
+            ) / len(question_tokens)
+            document_tokens = cls._focus_tokens(
+                chunk.document_name
+            )
+            document_overlap = sum(
+                any(cls._tokens_match(token, candidate) for candidate in document_tokens)
+                for token in question_tokens
+            ) / len(question_tokens)
+            unmatched_document_tokens = sum(
+                not any(cls._tokens_match(token, candidate) for candidate in question_tokens)
+                for token in document_tokens
+            )
+            section = (chunk.section_title or "").casefold()
+            section_bonus = (
+                0.2
+                if procedural_question
+                and any(
+                    value in section
+                    for value in ("kullanım adımları", "menü yolu", "alanlar")
+                )
+                else 0.0
+            )
+            score = (
+                overlap
+                + (0.3 * document_overlap)
+                + section_bonus
+                + (0.1 * chunk.similarity_score)
+                - (0.12 * unmatched_document_tokens)
+            )
+            scores[chunk.relative_path] = max(
+                scores.get(chunk.relative_path, 0.0),
+                score,
+            )
+        best_path, best_score = max(scores.items(), key=lambda item: item[1])
+        relevance_score = best_score - (
+            0.1
+            * max(
+                chunk.similarity_score
+                for chunk in chunks
+                if chunk.relative_path == best_path
+            )
+        )
+        if relevance_score < 0.2:
+            return chunks
+        return sorted(
+            (chunk for chunk in chunks if chunk.relative_path == best_path),
+            key=lambda chunk: chunk.chunk_index,
+        )
+
+    @staticmethod
+    def _focus_tokens(value: str) -> set[str]:
+        stopwords = {
+            "aciklar", "alan", "bilgi", "butonu", "icin", "kullanilir",
+            "nasil", "nerede", "nedir", "zaman", "veya", "hangi",
+        }
+        return {
+            token
+            for token in re.findall(r"[a-z0-9çğıöşü]+", value.casefold())
+            if len(token) >= 3 and token not in stopwords
+        }
+
+    @staticmethod
+    def _tokens_match(first: str, second: str) -> bool:
+        if first == second:
+            return True
+        return len(first) >= 5 and len(second) >= 5 and first[:5] == second[:5]
 
     @staticmethod
     def _build_sources(

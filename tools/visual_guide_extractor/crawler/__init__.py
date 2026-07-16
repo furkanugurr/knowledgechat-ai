@@ -2,5 +2,6 @@
 
 from .page_loader import PageLoader
 from .parser import GuidePageParser
+from .category_discovery import CriticalCategoryDiscovery, DiscoveredPage
 
-__all__ = ["GuidePageParser", "PageLoader"]
+__all__ = ["CriticalCategoryDiscovery", "DiscoveredPage", "GuidePageParser", "PageLoader"]

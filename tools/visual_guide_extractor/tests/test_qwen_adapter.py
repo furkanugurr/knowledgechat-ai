@@ -64,6 +64,14 @@ class QwenAdapterParsingTests(unittest.TestCase):
         self.assertEqual(result.fields[0].name, "Durum")
         self.assertTrue(result.uncertainties)
 
+    def test_removes_empty_steps_and_duplicate_controls(self) -> None:
+        payload = valid_payload()
+        payload["ordered_steps"] = ["", "Ekle düğmesine tıklayın.", "Ekle düğmesine tıklayın."]
+        payload["controls"].append(payload["controls"][0].copy())
+        result = QwenVisionAdapter.parse_content(json.dumps(payload), "Page", 0)
+        self.assertEqual(["Ekle düğmesine tıklayın."], result.ordered_steps)
+        self.assertEqual(1, len(result.controls))
+
 
 if __name__ == "__main__":
     unittest.main()

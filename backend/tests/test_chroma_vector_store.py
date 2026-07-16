@@ -1,6 +1,8 @@
 """Tests for persistent ChromaDB vector storage."""
 
+import gc
 import tempfile
+import time
 import unittest
 from datetime import UTC, datetime
 from pathlib import Path
@@ -59,7 +61,22 @@ class ChromaVectorStoreTests(unittest.TestCase):
         self.collection_name = "knowledgechat-tests"
 
     def tearDown(self) -> None:
-        self._temporary_directory.cleanup()
+        # Chroma keeps a process-wide shared client on Windows. Release it
+        # before deleting the isolated persistence directory so SQLite and
+        # HNSW files are not left locked between tests.
+        shared_client = chromadb.api.client.SharedSystemClient
+        for system in shared_client._identifier_to_system.values():
+            system.stop()
+        shared_client.clear_system_cache()
+        for attempt in range(10):
+            try:
+                self._temporary_directory.cleanup()
+                break
+            except PermissionError:
+                if attempt == 9:
+                    raise
+                gc.collect()
+                time.sleep(0.1)
 
     def create_provider(self) -> ChromaVectorStoreProvider:
         """Create a provider using an isolated persistent directory."""

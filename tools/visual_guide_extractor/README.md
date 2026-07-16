@@ -117,12 +117,13 @@ work/visual_guide_extraction/
 The Markdown previews in `reports/` are placeholders for review. They contain a
 prominent draft warning and are never written to `knowledge_base`.
 
-## Why nothing is indexed yet
+## Why extraction output is not indexed directly
 
 Screenshot interpretation can contain OCR mistakes, UI-version mismatches, or
-unsupported inferred steps. A later sprint must add review criteria and an
-approval workflow. Only administrator-reviewed Markdown should eventually be
-copied into `knowledge_base/guides/` and passed to the existing indexer.
+unsupported inferred steps. Work artifacts are therefore never passed directly
+to the indexer. Sprint 20 promoted only the 42 guides that passed the quality
+gate and compatibility checks into `knowledge_base/guides/antikor_v2/`; images,
+model JSON, reports, and rejected drafts remain local under `work/`.
 
 The vision quality report is written to
 `work/visual_guide_extraction/reports/vision_quality_report.json`. A successful
@@ -136,11 +137,12 @@ signals; they never cause automatic indexing.
 
 ## Final quality gate
 
-The Sprint 17 flow is Qwen JSON -> Qwen validation -> Gemma normalization ->
-final quality validation -> approved draft Markdown. The post-Gemma gate checks
-every action against Qwen controls and fields, preserves Turkish UI labels,
-rejects unsupported menu paths, and detects English prose while allowing terms
-such as IP, DNS, NAT, Firewall, IPv4, and IPv6.
+The current flow is Qwen JSON -> Qwen validation -> deterministic Markdown ->
+final quality validation -> approved draft Markdown. Gemma normalization is an
+optional fallback before the final gate for difficult pages only. The final gate
+checks every action against Qwen controls and fields, preserves Turkish UI
+labels, rejects unsupported menu paths, and detects English prose while allowing
+terms such as IP, DNS, NAT, Firewall, IPv4, and IPv6.
 
 Each guide receives `confidence_score`, `warnings`, and `approved`. Markdown is
 written to `work/visual_guide_extraction/approved_drafts/` only when no
@@ -159,3 +161,21 @@ tools\visual_guide_extractor\.venv\Scripts\python.exe -m tools.visual_guide_extr
 Validated Gemma fallback results are resumable. Set
 `VISUAL_GUIDE_FORCE_NORMALIZATION=true` only when a live re-normalization is
 required; otherwise an existing validated fallback result is reused.
+
+## Critical-category pilot and promotion
+
+The checkpointed Sprint 19 pilot discovers only the configured critical
+Antikor v2 categories, reuses valid cached Qwen results, and records every
+Gemma fallback decision:
+
+```powershell
+tools\visual_guide_extractor\.venv\Scripts\python.exe -m tools.visual_guide_extractor.scripts.run_sprint19_pilot
+```
+
+`recover_sprint19_rejected` retries only invalid page-level fallback output and
+never reprocesses the full image set. `promote_sprint20` validates the approved
+Markdown contract before copying reviewed guides into
+`knowledge_base/guides/antikor_v2/`. `validate_sprint20_compatibility` verifies
+that promoted files work with the existing loader, parser, chunker, and metadata
+pipeline. The promotion and indexing operations remain explicit; running the
+crawler alone cannot modify the knowledge base or ChromaDB.

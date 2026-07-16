@@ -122,13 +122,50 @@ class QwenVisionAdapter:
             raise ValueError("Qwen JSON response must be an object")
         parsed["page_title"] = page_title
         parsed["image_index"] = image_index
+        QwenVisionAdapter._remove_empty_and_duplicate_items(parsed)
         QwenVisionAdapter._prefer_fields_for_duplicate_labels(parsed)
+        QwenVisionAdapter._remove_empty_and_duplicate_items(parsed)
         try:
             return VisionExtraction.model_validate(parsed)
         except ValidationError as exc:
             raise ValueError(
                 f"Qwen JSON response does not match the schema: {exc}"
             ) from exc
+
+    @staticmethod
+    def _remove_empty_and_duplicate_items(payload: dict[str, object]) -> None:
+        """Clean harmless model formatting noise without adding observations."""
+        for key in ("ordered_steps", "warnings", "uncertainties"):
+            values = payload.get(key)
+            if not isinstance(values, list):
+                continue
+            seen: set[str] = set()
+            cleaned: list[str] = []
+            for value in values:
+                if not isinstance(value, str) or not value.strip():
+                    continue
+                marker = value.strip().casefold()
+                if marker not in seen:
+                    seen.add(marker)
+                    cleaned.append(value.strip())
+            payload[key] = cleaned
+        for key in ("controls", "fields"):
+            values = payload.get(key)
+            if not isinstance(values, list):
+                continue
+            seen: set[str] = set()
+            cleaned: list[object] = []
+            for value in values:
+                if not isinstance(value, dict):
+                    cleaned.append(value)
+                    continue
+                marker = str(value.get("name", "")).strip().casefold()
+                if marker and marker in seen:
+                    continue
+                if marker:
+                    seen.add(marker)
+                cleaned.append(value)
+            payload[key] = cleaned
 
     @staticmethod
     def _prefer_fields_for_duplicate_labels(payload: dict[str, object]) -> None:

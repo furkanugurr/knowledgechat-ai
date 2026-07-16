@@ -33,7 +33,7 @@ class FallbackDecisionEngine:
             reasons.append("complex_multi_step_page")
         elif image_count >= 3 or step_count >= 8:
             complexity = "medium"
-        if confidence_score < 0.80:
+        if confidence_score < 0.85:
             reasons.append("low_confidence")
         if warning_count >= 3:
             reasons.append("too_many_warnings")

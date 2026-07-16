@@ -33,6 +33,13 @@ class DeterministicMarkdownTests(unittest.TestCase):
         self.assertIn("- `Ekle`", markdown)
         self.assertNotIn("Click this button", markdown)
 
+    def test_pilot_markdown_has_required_sections(self):
+        page = GuidePage(page_title="Kural", source_url="https://example.test", blocks=[])
+        guide = MarkdownGenerator().build_deterministic_guide(page, [])
+        markdown = MarkdownGenerator().generate_pilot_approved(guide, 1.0)
+        for heading in ("Kapsam", "Menü yolu", "Kullanım adımları", "Alanlar", "Görünür kontroller", "Uyarılar", "Kaynak bilgisi"):
+            self.assertIn(f"## {heading}", markdown)
+
 
 if __name__ == "__main__":
     unittest.main()

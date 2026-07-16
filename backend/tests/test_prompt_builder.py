@@ -25,12 +25,12 @@ class PromptBuilderTests(unittest.TestCase):
 
             prompt = builder.build("User message")
 
-        self.assertEqual(
-            prompt,
+        self.assertTrue(prompt.startswith(
             "SYSTEM PROMPT\nSystem guidance\n\n"
             "DEVELOPER PROMPT\nDeveloper guidance\n\n"
-            "USER MESSAGE\nUser message",
-        )
+            "ANSWER FOCUS CONTRACT\n"
+        ))
+        self.assertTrue(prompt.endswith("USER MESSAGE\nUser message"))
 
     def test_rejects_an_empty_prompt_file(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -82,6 +82,33 @@ class PromptBuilderTests(unittest.TestCase):
             prompt.index("USER MESSAGE"),
         )
 
+    def test_marks_arrow_workflow_as_sufficient_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            directory = Path(temporary_directory)
+            system_prompt = directory / "system.txt"
+            developer_prompt = directory / "developer.txt"
+            system_prompt.write_text("System guidance", encoding="utf-8")
+            developer_prompt.write_text("Developer guidance", encoding="utf-8")
+            builder = PromptBuilder(system_prompt, developer_prompt)
+            context = [
+                RetrievedChunk(
+                    chunk_text="Menü -> Arayüzü seç -> Kaydet",
+                    similarity_score=0.9,
+                    document_name="guide.md",
+                    relative_path="guide.md",
+                    section_title="Menü yolu",
+                    chunk_index=1,
+                    language="tr",
+                )
+            ]
+
+            prompt = builder.build("Nasıl yapılır?", context)
+
+        self.assertIn("EVIDENCE SUFFICIENCY NOTE", prompt)
+        self.assertIn("sufficient procedural evidence", prompt)
+        self.assertIn("ANSWER FOCUS CONTRACT", prompt)
+        self.assertIn("For a Turkish question, never switch to English", prompt)
+
     def test_default_prompt_preserves_user_question_language(self) -> None:
         prompt = PromptBuilder.from_defaults().build("Python nedir?")
 
@@ -98,7 +125,10 @@ class PromptBuilderTests(unittest.TestCase):
             "Answer the user's question yourself by synthesizing",
             prompt,
         )
-        self.assertIn("2 to 4 focused paragraphs", prompt)
+        self.assertIn("Answer only the exact entity and action", prompt)
+        self.assertIn("If the exact requested instruction is unavailable", prompt)
+        self.assertIn("Do not add generic background", prompt)
+        self.assertIn("Preserve detailed answers for sufficient evidence", prompt)
         self.assertIn("Do not invent missing details", prompt)
         self.assertIn(
             "Prefer a direct explanation followed by relevant details",

@@ -45,6 +45,23 @@ class PromptBuilder:
                 "KNOWLEDGE CONTEXT\n"
                 f"{self._format_context(retrieved_context)}"
             )
+            if any("->" in chunk.chunk_text for chunk in retrieved_context):
+                sections.append(
+                    "EVIDENCE SUFFICIENCY NOTE\n"
+                    "The directly relevant context contains an explicit "
+                    "arrow-separated workflow. Treat that workflow as "
+                    "sufficient procedural evidence and present its actions "
+                    "in source order without adding steps."
+                )
+        sections.append(
+            "ANSWER FOCUS CONTRACT\n"
+            "Treat the exact user question below as a strict boundary. "
+            "Use only context that directly answers its entity and action. "
+            "If the requested procedure or button behavior is not explicitly "
+            "present, give one concise limitation in the same language as the "
+            "question and stop. For a Turkish question, never switch to English. "
+            "Do not append adjacent topics or generic background."
+        )
         sections.append(f"USER MESSAGE\n{user_message}")
         return "\n\n".join(sections)
 

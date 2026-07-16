@@ -55,12 +55,13 @@ class MarkdownGenerator:
         return NormalizedGuide(
             page_title=page.page_title,
             source_url=page.source_url,
-            overview="",
+            overview=next((block.text for block in page.blocks if block.kind == "paragraph" and block.text), ""),
             navigation_paths=paths,
             controls=controls,
             fields=fields,
             ordered_steps=unique(
-                [item for result in vision_results for item in result.ordered_steps],
+                [item for block in page.blocks if block.kind == "ordered_list" for item in block.items]
+                + [item for result in vision_results for item in result.ordered_steps],
                 lambda item: item,
             ),
             warnings=unique(
@@ -200,4 +201,29 @@ class MarkdownGenerator:
         if guide.uncertainties:
             lines.extend(["", "## Belirsizlikler", ""])
             lines.extend(f"- {item}" for item in guide.uncertainties)
+        return "\n".join(lines).rstrip() + "\n"
+
+    def generate_pilot_approved(self, guide: NormalizedGuide, confidence: float) -> str:
+        """Render the fixed Sprint 19 promotion-review section contract."""
+        language = LanguageValidator()
+        lines = [f"# {guide.page_title}", "", "## Kapsam", "", guide.overview or "Kaynak sayfadaki görünür içerik."]
+        lines.extend(["", "## Menü yolu", ""])
+        lines.extend([*(f"- `{item}`" for item in guide.navigation_paths)] or ["- Görünür menü yolu bulunamadı."])
+        lines.extend(["", "## Kullanım adımları", ""])
+        lines.extend([*(f"{index}. {item}" for index, item in enumerate(guide.ordered_steps, 1))] or ["- Görünür kullanım adımı bulunamadı."])
+        lines.extend(["", "## Alanlar", ""])
+        for item in guide.fields:
+            description = "" if language.english_sentences([item.description]) else f": {item.description}"
+            lines.append(f"- `{item.name}` ({item.location}){description}")
+        if not guide.fields:
+            lines.append("- Görünür alan bulunamadı.")
+        lines.extend(["", "## Görünür kontroller", ""])
+        for item in guide.controls:
+            description = "" if language.english_sentences([item.description]) else f": {item.description}"
+            lines.append(f"- `{item.name}`{description}")
+        if not guide.controls:
+            lines.append("- Görünür kontrol bulunamadı.")
+        lines.extend(["", "## Uyarılar", ""])
+        lines.extend([*(f"- {item}" for item in [*guide.warnings, *guide.uncertainties])] or ["- Görünür uyarı bulunamadı."])
+        lines.extend(["", "## Kaynak bilgisi", "", f"- Sayfa: {guide.source_url}", f"- Güven puanı: {confidence:.2f}", "- Durum: Otomatik kalite kapısından geçmiş taslak; indekslenmemiştir."])
         return "\n".join(lines).rstrip() + "\n"
