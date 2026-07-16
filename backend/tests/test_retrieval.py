@@ -44,11 +44,14 @@ class SearchVectorStoreProvider(VectorStoreProvider):
     def __init__(
         self,
         records: list[VectorSearchRecord] | None = None,
+        document_records: dict[str, list[VectorSearchRecord]] | None = None,
         error: Exception | None = None,
     ) -> None:
         self.records = records or []
+        self.document_records = document_records or {}
         self.error = error
         self.top_k: int | None = None
+        self.document_top_k: int | None = None
 
     def create_collection(self) -> VectorCollectionInfo:
         return VectorCollectionInfo(
@@ -77,6 +80,15 @@ class SearchVectorStoreProvider(VectorStoreProvider):
         if self.error is not None:
             raise self.error
         return self.records[:top_k]
+
+    def search_document(
+        self,
+        query_embedding: EmbeddingVector,
+        relative_path: str,
+        top_k: int,
+    ) -> list[VectorSearchRecord]:
+        self.document_top_k = top_k
+        return self.document_records.get(relative_path, [])[:top_k]
 
     def health_check(self) -> bool:
         return True
@@ -181,7 +193,8 @@ class RetrievalServiceTests(unittest.IsolatedAsyncioTestCase):
         service = RetrievalService(
             embedding_service=embedding_service,  # type: ignore[arg-type]
             vector_store_provider=provider,
-            top_k=5,
+            candidate_k=30,
+            context_max_chunks=5,
         )
 
         result = await service.retrieve("How does routing work?")
@@ -193,6 +206,71 @@ class RetrievalServiceTests(unittest.IsolatedAsyncioTestCase):
             "fastapi/routing.md",
         )
         self.assertIsInstance(result.model_dump_json(), str)
+
+    async def test_candidate_pool_is_larger_than_final_context(self) -> None:
+        records = [create_record(f"guide/{index}.md", 0.9 - index / 100, index) for index in range(10)]
+        provider = SearchVectorStoreProvider(records=records)
+        service = RetrievalService(
+            embedding_service=RecordingQuestionEmbeddingService(),  # type: ignore[arg-type]
+            vector_store_provider=provider,
+            candidate_k=30,
+            context_max_chunks=5,
+        )
+
+        result = await service.retrieve("unmatched question")
+
+        self.assertEqual(30, provider.top_k)
+        self.assertLessEqual(result.total_results, 5)
+
+    async def test_expands_dominant_document_and_preserves_chunk_order(self) -> None:
+        path = "guides/antikor_v2/nat/dinamik-nat.md"
+        title = VectorSearchRecord(
+            document="# Dinamik NAT", similarity_score=0.9,
+            metadata={"document_name":"dinamik-nat.md","relative_path":path,"section_title":"Dinamik NAT","chunk_index":0,"language":"tr"},
+        )
+        steps = VectorSearchRecord(
+            document="## Kullanım adımları\n+ Ekle ardından Kaydet", similarity_score=0.6,
+            metadata={"document_name":"dinamik-nat.md","relative_path":path,"section_title":"Kullanım adımları","chunk_index":2,"language":"tr"},
+        )
+        controls = VectorSearchRecord(
+            document="## Görünür kontroller\n+ Ekle\nKaydet", similarity_score=0.5,
+            metadata={"document_name":"dinamik-nat.md","relative_path":path,"section_title":"Görünür kontroller","chunk_index":4,"language":"tr"},
+        )
+        provider = SearchVectorStoreProvider(
+            records=[title], document_records={path: [controls, steps, title]}
+        )
+        service = RetrievalService(
+            embedding_service=RecordingQuestionEmbeddingService(),  # type: ignore[arg-type]
+            vector_store_provider=provider,
+            candidate_k=30,
+            context_max_chunks=5,
+        )
+
+        result = await service.retrieve("Dinamik NAT nasıl oluşturulur?")
+
+        self.assertEqual([0, 2, 4], [item.chunk_index for item in result.chunks])
+        context = "\n".join(item.chunk_text for item in result.chunks)
+        self.assertIn("Kullanım adımları", context)
+        self.assertIn("+ Ekle", context)
+        self.assertIn("Kaydet", context)
+
+    async def test_rejects_unrelated_mixed_context(self) -> None:
+        provider = SearchVectorStoreProvider(
+            records=[
+                create_record("logs/top-target-ip.md", 0.9, 0),
+                create_record("vpn/settings.md", 0.88, 0),
+            ]
+        )
+        service = RetrievalService(
+            embedding_service=RecordingQuestionEmbeddingService(),  # type: ignore[arg-type]
+            vector_store_provider=provider,
+            candidate_k=30,
+            context_max_chunks=5,
+        )
+
+        result = await service.retrieve("Yeni güvenlik kuralında Hedef Adres alanı")
+
+        self.assertEqual([], result.chunks)
 
 
 if __name__ == "__main__":

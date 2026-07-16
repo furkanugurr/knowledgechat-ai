@@ -69,9 +69,16 @@ class Retriever:
         if top_k <= 0:
             raise ValueError("top_k must be greater than zero")
 
+        question_embedding = await self.embed_question(question)
+        return await self.retrieve_with_embedding(question_embedding, top_k)
+
+    async def embed_question(self, question: str) -> EmbeddingVector:
+        """Generate and validate the embedding used by retrieval stages."""
+        if not question.strip():
+            raise ValueError("question cannot be empty")
         logger.info("Generating question embedding")
         try:
-            question_embedding = await self._embedding_service.embed_text(
+            return await self._embedding_service.embed_text(
                 question
             )
         except EmbeddingProviderError as exc:
@@ -79,6 +86,14 @@ class Retriever:
                 "Unable to generate the question embedding."
             ) from exc
 
+    async def retrieve_with_embedding(
+        self,
+        question_embedding: EmbeddingVector,
+        top_k: int,
+    ) -> list[RetrievedChunk]:
+        """Search using an existing embedding so expansion can reuse it."""
+        if top_k <= 0:
+            raise ValueError("top_k must be greater than zero")
         logger.info("Searching vector database top_k=%d", top_k)
         try:
             records = await asyncio.to_thread(
@@ -115,6 +130,31 @@ class Retriever:
         )
         logger.info("Retrieved chunks count=%d", len(chunks))
         return chunks
+
+    async def retrieve_document(
+        self,
+        question_embedding: EmbeddingVector,
+        relative_path: str,
+        top_k: int,
+    ) -> list[RetrievedChunk]:
+        """Retrieve similarity-ranked sibling chunks from one document."""
+        try:
+            records = await asyncio.to_thread(
+                self._vector_store_provider.search_document,
+                question_embedding,
+                relative_path,
+                top_k,
+            )
+        except VectorSearchError as exc:
+            raise RetrievalSearchError(
+                "Unable to expand the selected source document."
+            ) from exc
+        try:
+            return [self._to_retrieved_chunk(record) for record in records]
+        except (KeyError, TypeError, ValidationError) as exc:
+            raise InvalidRetrievalResultError(
+                "The vector store returned invalid document chunks."
+            ) from exc
 
     @staticmethod
     def _to_retrieved_chunk(

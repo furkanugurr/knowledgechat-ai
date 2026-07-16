@@ -58,7 +58,9 @@ def create_lifespan(
         application.state.retrieval_service = RetrievalService(
             embedding_service=embedding_service,
             vector_store_provider=vector_store_provider,
-            top_k=settings.retrieval_top_k,
+            candidate_k=settings.retrieval_candidate_k,
+            context_max_chunks=settings.chat_context_max_chunks,
+            min_similarity=settings.retrieval_min_similarity,
         )
         try:
             yield

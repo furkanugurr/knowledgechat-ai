@@ -63,6 +63,7 @@ class OllamaProvider(LLMProvider):
                     "stream": False,
                     "options": {
                         "num_predict": self._max_tokens,
+                        "temperature": 0,
                     },
                 },
             )

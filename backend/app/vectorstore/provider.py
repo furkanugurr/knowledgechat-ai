@@ -73,5 +73,14 @@ class VectorStoreProvider(ABC):
         """Return the highest-similarity records for one query vector."""
 
     @abstractmethod
+    def search_document(
+        self,
+        query_embedding: EmbeddingVector,
+        relative_path: str,
+        top_k: int,
+    ) -> list[VectorSearchRecord]:
+        """Return similarity-ranked chunks from one source document."""
+
+    @abstractmethod
     def health_check(self) -> bool:
         """Return whether the vector store is available."""
