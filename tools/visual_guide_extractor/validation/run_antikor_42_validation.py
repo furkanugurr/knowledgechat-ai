@@ -6,11 +6,14 @@ from pathlib import Path
 from time import perf_counter
 from typing import Any
 
+import httpx
+
 ROOT=Path(__file__).resolve().parents[3]; sys.path.insert(0,str(ROOT/"backend"))
 from app.core.config import get_settings
 from app.embedding.ollama_embedding import OllamaEmbeddingProvider
 from app.prompt.prompt_builder import PromptBuilder
 from app.providers.ollama_provider import OllamaProvider
+from app.providers.base import LLMProviderTimeoutError, LLMProviderUnavailableError
 from app.retrieval.intent import IntentClassifier
 from app.services.chat_service import ChatService
 from app.services.embedding_service import EmbeddingService
@@ -129,6 +132,44 @@ class Trace:
         service._retriever.retrieve_with_embedding=search; service._reranker.rank=rank
     def reset(self): self.initial=[]; self.reranked=[]
 
+class StageTiming:
+    """Measure live validation stages without changing production services."""
+    def __init__(self,chat):
+        self.retrieval=0.0; self.prompt=0.0; self.llm=0.0
+        retrieve0=chat._retrieval_service.retrieve
+        build0=chat._prompt_builder.build
+        generate0=chat._provider.generate_response
+        async def retrieve(question):
+            tick=perf_counter()
+            try: return await retrieve0(question)
+            finally: self.retrieval+=perf_counter()-tick
+        def build(question,chunks):
+            tick=perf_counter()
+            try: return build0(question,chunks)
+            finally: self.prompt+=perf_counter()-tick
+        async def generate(prompt):
+            tick=perf_counter()
+            try: return await generate0(prompt)
+            finally: self.llm+=perf_counter()-tick
+        chat._retrieval_service.retrieve=retrieve
+        chat._prompt_builder.build=build
+        chat._provider.generate_response=generate
+    def reset(self): self.retrieval=0.0; self.prompt=0.0; self.llm=0.0
+    def snapshot(self,total):
+        return {"retrieval_duration_seconds":round(self.retrieval,3),"prompt_construction_duration_seconds":round(self.prompt,6),
+          "llm_duration_seconds":round(self.llm,3),"total_duration_seconds":round(total,3)}
+
+def transient_error(exc):
+    """Retry only local Ollama timeouts, connection failures, or HTTP 5xx."""
+    if isinstance(exc,LLMProviderTimeoutError): return True
+    if not isinstance(exc,LLMProviderUnavailableError): return False
+    current=exc.__cause__
+    while current:
+        if isinstance(current,(httpx.ConnectError,httpx.NetworkError)): return True
+        if isinstance(current,httpx.HTTPStatusError): return current.response.status_code>=500
+        current=current.__cause__
+    return False
+
 def evaluate(test,response,trace,duration):
     answer=response.response; folded=answer.casefold(); expected=test["expected_relative_path"]; citations=[x.model_dump() for x in response.sources]
     paths=[x["relative_path"] for x in citations]
@@ -174,7 +215,12 @@ def summarize(data,results,runtime):
       "failure_categories":dict(Counter(x["root_cause_classification"] for x in results if not x["passed"])),"wrong_source_count":wrong,
       "wrong_section_count":sum(not x["checks"]["section_correct"] for x in results),"false_limitation_count":sum(x["checks"]["false_limitation"] for x in results),
       "unsupported_claim_count":unsupported,"unrelated_topic_count":drift,"citation_error_count":sum(not x["checks"]["citation_correct"] for x in results),
-      "average_response_duration_seconds":round(sum(x["response_duration_seconds"] for x in results)/max(len(results),1),3),"runtime":runtime}
+      "average_response_duration_seconds":round(sum(x["response_duration_seconds"] for x in results)/max(len(results),1),3),
+      "questions_requiring_retry":sum(x.get("attempt_count",1)>1 for x in results),
+      "total_timeout_count":sum(sum(a.get("error_type")=="LLMProviderTimeoutError" for a in x.get("attempts",[])) for x in results),
+      "maximum_attempts_used":max((x.get("attempt_count",1) for x in results),default=0),
+      "average_first_attempt_response_time":round(sum(x.get("attempts",[{"duration_seconds":x["response_duration_seconds"]}])[0]["duration_seconds"] for x in results)/max(len(results),1),3),
+      "average_final_response_time":round(sum(x.get("attempts",[{"duration_seconds":x["response_duration_seconds"]}])[-1]["duration_seconds"] for x in results)/max(len(results),1),3),"runtime":runtime}
     result["ready_for_remaining_extraction"]=bool(data["guide_count"]==42 and len(grouped)==42 and result["pass_rate"]>=95 and wrong==0 and unsupported==0 and drift==0)
     return result
 
@@ -189,24 +235,37 @@ def write_reports(summary,results):
     failure_name="remaining_failures.md" if SPRINT=="sprint22" else "failed_cases.md"
     (OUT/failure_name).write_text("\n".join(lines),encoding="utf-8")
 
-async def run(data,limit=None):
+async def run(data,limit=None,only_id=None,no_resume=False,max_attempts=3):
     s=get_settings(); llm=OllamaProvider(s.ollama_host,s.chat_model,s.request_timeout,s.chat_max_tokens); emb=OllamaEmbeddingProvider(s.ollama_host,s.embedding_model,s.request_timeout)
     await llm.start(); await emb.start(); vector=ChromaVectorStoreProvider(s.vector_db_path,s.vector_collection_name)
     retrieval=RetrievalService(EmbeddingService(emb),vector,s.retrieval_candidate_k,s.chat_context_max_chunks,s.retrieval_min_similarity)
-    trace=Trace(retrieval); chat=ChatService(llm,PromptBuilder.from_defaults(),retrieval,s.retrieval_min_similarity); OUT.mkdir(parents=True,exist_ok=True)
-    selected=data["cases"][:limit] if limit else data["cases"]; completed={}
-    if REPORT.exists():
+    trace=Trace(retrieval); chat=ChatService(llm,PromptBuilder.from_defaults(),retrieval,s.retrieval_min_similarity); timing=StageTiming(chat); OUT.mkdir(parents=True,exist_ok=True)
+    selected=[x for x in data["cases"] if x["id"]==only_id] if only_id else (data["cases"][:limit] if limit else data["cases"]); completed={}
+    if REPORT.exists() and not no_resume:
         try: completed={x["id"]:x for x in json.loads(REPORT.read_text(encoding="utf-8")).get("results",[])}
         except (OSError,ValueError): pass
     started=perf_counter()
     try:
         for n,test in enumerate(selected,1):
             if test["id"] in completed: print(f"[{n}/{len(selected)}] RESUME {test['id']}",flush=True); continue
-            trace.reset(); tick=perf_counter()
-            try: result=evaluate(test,await chat.generate_response(test["question"]),trace,perf_counter()-tick)
-            except Exception as exc:
+            attempts=[]; result=None
+            for attempt in range(1,max_attempts+1):
+                trace.reset(); timing.reset(); tick=perf_counter()
+                try:
+                    result=evaluate(test,await chat.generate_response(test["question"]),trace,perf_counter()-tick)
+                    attempts.append({"attempt":attempt,"error_type":None,"duration_seconds":result["response_duration_seconds"],**timing.snapshot(result["response_duration_seconds"]),"passed":result["passed"]})
+                    break
+                except Exception as exc:
+                    duration=perf_counter()-tick; retryable=transient_error(exc)
+                    attempts.append({"attempt":attempt,"error_type":type(exc).__name__,"error":str(exc),"duration_seconds":round(duration,3),**timing.snapshot(duration),"transient":retryable,"passed":False,
+                      "retrieved_sources":[chunk(x) for x in trace.initial]})
+                    if not retryable or attempt>=max_attempts: break
+                    await asyncio.sleep(1.0)
+            if result is None:
                 checks={"source_correct":False,"section_correct":False,"intent_correct":False,"required_terms_missing":test["required_terms"],"forbidden_terms_found":[],"false_limitation":False,"unsupported_claim":False,"unknown_ui_labels":[],"unrelated_topic":False,"procedure_order_correct":False,"citation_correct":False}
-                result={**test,"detected_intent":IntentClassifier.classify(test["question"]).value,"initial_semantic_candidates":[chunk(x) for x in trace.initial],"reranked_candidates":[],"selected_document":None,"selected_sections":[],"generated_answer":"","returned_citations":[],"response_duration_seconds":round(perf_counter()-tick,3),"checks":checks,"passed":False,"root_cause_classification":"C. LLM answer failure","recommended_fix_type":"runtime review","error":type(exc).__name__+": "+str(exc)}
+                last=attempts[-1]
+                result={**test,"detected_intent":IntentClassifier.classify(test["question"]).value,"initial_semantic_candidates":last.get("retrieved_sources",[]),"reranked_candidates":[],"selected_document":None,"selected_sections":[],"generated_answer":"","returned_citations":[],"response_duration_seconds":last["duration_seconds"],"checks":checks,"passed":False,"root_cause_classification":"C. LLM answer failure","recommended_fix_type":"runtime review","error":last["error_type"]+": "+last.get("error","")}
+            result["attempt_count"]=len(attempts); result["attempts"]=attempts; result["final_result"]="passed" if result["passed"] else "failed"
             completed[test["id"]]=result; ordered=[completed[x["id"]] for x in selected if x["id"] in completed]
             runtime={"chat_model":s.chat_model,"embedding_model":s.embedding_model,"vector_collection_name":s.vector_collection_name,"vector_db_path":str(s.vector_db_path),"candidate_k":s.retrieval_candidate_k,"context_max_chunks":s.chat_context_max_chunks,"elapsed_seconds":round(perf_counter()-started,3)}
             summary=summarize(data,ordered,runtime); REPORT.write_text(json.dumps({"summary":summary,"inventory":data["inventory"],"results":ordered},ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
@@ -216,7 +275,7 @@ async def run(data,limit=None):
     summary=summarize(data,ordered,runtime); REPORT.write_text(json.dumps({"summary":summary,"inventory":data["inventory"],"results":ordered},ensure_ascii=False,indent=2)+"\n",encoding="utf-8"); write_reports(summary,ordered); print(json.dumps(summary,ensure_ascii=False),flush=True)
 
 def main():
-    p=argparse.ArgumentParser(); p.add_argument("--dataset-only",action="store_true"); p.add_argument("--limit",type=int); a=p.parse_args()
+    p=argparse.ArgumentParser(); p.add_argument("--dataset-only",action="store_true"); p.add_argument("--limit",type=int); p.add_argument("--only-id"); p.add_argument("--no-resume",action="store_true"); p.add_argument("--max-attempts",type=int,default=3); a=p.parse_args()
     data=build(); print(f"dataset guides={data['guide_count']} questions={data['question_count']}",flush=True)
-    if not a.dataset_only: asyncio.run(run(data,a.limit))
+    if not a.dataset_only: asyncio.run(run(data,a.limit,a.only_id,a.no_resume,a.max_attempts))
 if __name__=="__main__": main()
