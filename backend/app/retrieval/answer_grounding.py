@@ -21,6 +21,43 @@ class GroundedAnswerGuard:
     def __init__(self) -> None:
         self._normalizer = TurkishLexicalNormalizer()
 
+    def structured_fast_path(
+        self,
+        question: str,
+        intent: QuestionIntent,
+        chunks: list[RetrievedChunk],
+        navigation_hint: str | None = None,
+        creation_hint: str | None = None,
+    ) -> tuple[str, list[RetrievedChunk]] | None:
+        """Build an evidence-only answer for safe, structured intents."""
+        if intent not in {
+            QuestionIntent.NAVIGATION,
+            QuestionIntent.FIRST_ACTION,
+            QuestionIntent.FIELD_LISTING,
+        }:
+            return None
+        if len({item.relative_path for item in chunks}) != 1:
+            return None
+        supporting = [
+            item for item in chunks
+            if self._section_matches(intent, item.section_title)
+        ]
+        if intent == QuestionIntent.FIRST_ACTION and creation_hint not in {
+            None, "unavailable"
+        }:
+            control_chunks = [
+                item for item in supporting
+                if creation_hint.casefold() in item.chunk_text.casefold()
+            ]
+            if control_chunks:
+                supporting = control_chunks
+        if not supporting or not any(item.chunk_text.strip() for item in supporting):
+            return None
+        answer = self._fallback(
+            question, intent, supporting, navigation_hint, creation_hint
+        )
+        return (answer, supporting) if answer else None
+
     def ensure_grounded(
         self,
         question: str,
@@ -133,6 +170,11 @@ class GroundedAnswerGuard:
                 return paths[0].strip().strip(chr(96))
             return bullets[0].strip().strip(chr(96)) if bullets else None
         if intent in {QuestionIntent.PROCEDURE, QuestionIntent.FIRST_ACTION}:
+            if (
+                intent == QuestionIntent.FIRST_ACTION
+                and creation_hint and creation_hint != "unavailable"
+            ):
+                return creation_hint
             steps = [text.strip() for _, text in self._STEP.findall(evidence)]
             steps = list(dict.fromkeys(steps))
             if not steps:
@@ -176,7 +218,13 @@ class GroundedAnswerGuard:
         if intent == QuestionIntent.NAVIGATION:
             return "menü yolu" in folded
         if intent in {QuestionIntent.PROCEDURE, QuestionIntent.FIRST_ACTION}:
-            return "kullanım adımları" in folded
+            return (
+                "kullanım adımları" in folded
+                or (
+                    intent == QuestionIntent.FIRST_ACTION
+                    and "görünür kontroller" in folded
+                )
+            )
         if intent in {QuestionIntent.FIELD_LISTING, QuestionIntent.FIELD_PURPOSE}:
             return "alanlar" in folded
         return "görünür kontroller" in folded

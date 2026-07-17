@@ -208,6 +208,8 @@ def summarize(data,results,runtime):
     for x in generated: grouped[x["expected_relative_path"]].append(x)
     good=[p for p,v in grouped.items() if all(x["passed"] for x in v)]; bad=[p for p,v in grouped.items() if not all(x["passed"] for x in v)]
     passed=sum(x["passed"] for x in results); wrong=sum(not x["checks"]["source_correct"] for x in results); drift=sum(x["checks"]["unrelated_topic"] for x in results); unsupported=sum(x["checks"]["unsupported_claim"] for x in results)
+    fast=[x for x in results if x.get("diagnostics",{}).get("answer_mode")=="deterministic_fast_path"]
+    llm=[x for x in results if x.get("diagnostics",{}).get("ollama_called")]
     result={"total_guides":data["guide_count"],"total_questions":len(results),"generated_guide_questions":len(generated),"critical_regression_questions":len(results)-len(generated),
       "passed_questions":passed,"failed_questions":len(results)-passed,"pass_rate":round(100*passed/max(len(results),1),2),
       "fully_validated_guide_count":len(good),"guide_level_pass_rate":round(100*len(good)/max(data["guide_count"],1),2),"failed_guides":bad,
@@ -220,7 +222,11 @@ def summarize(data,results,runtime):
       "total_timeout_count":sum(sum(a.get("error_type")=="LLMProviderTimeoutError" for a in x.get("attempts",[])) for x in results),
       "maximum_attempts_used":max((x.get("attempt_count",1) for x in results),default=0),
       "average_first_attempt_response_time":round(sum(x.get("attempts",[{"duration_seconds":x["response_duration_seconds"]}])[0]["duration_seconds"] for x in results)/max(len(results),1),3),
-      "average_final_response_time":round(sum(x.get("attempts",[{"duration_seconds":x["response_duration_seconds"]}])[-1]["duration_seconds"] for x in results)/max(len(results),1),3),"runtime":runtime}
+      "average_final_response_time":round(sum(x.get("attempts",[{"duration_seconds":x["response_duration_seconds"]}])[-1]["duration_seconds"] for x in results)/max(len(results),1),3),
+      "fast_path_answer_count":len(fast),"llm_answer_count":len(llm),
+      "average_fast_path_duration":round(sum(x["response_duration_seconds"] for x in fast)/max(len(fast),1),3),
+      "average_llm_duration":round(sum(x["response_duration_seconds"] for x in llm)/max(len(llm),1),3),
+      "citation_correctness_percent":round(100*(len(results)-sum(not x["checks"]["citation_correct"] for x in results))/max(len(results),1),2),"runtime":runtime}
     result["ready_for_remaining_extraction"]=bool(data["guide_count"]==42 and len(grouped)==42 and result["pass_rate"]>=95 and wrong==0 and unsupported==0 and drift==0)
     return result
 
@@ -253,18 +259,20 @@ async def run(data,limit=None,only_id=None,no_resume=False,max_attempts=3):
                 trace.reset(); timing.reset(); tick=perf_counter()
                 try:
                     result=evaluate(test,await chat.generate_response(test["question"]),trace,perf_counter()-tick)
-                    attempts.append({"attempt":attempt,"error_type":None,"duration_seconds":result["response_duration_seconds"],**timing.snapshot(result["response_duration_seconds"]),"passed":result["passed"]})
+                    result["diagnostics"]=chat.last_diagnostics
+                    attempts.append({"attempt":attempt,"error_type":None,"duration_seconds":result["response_duration_seconds"],**timing.snapshot(result["response_duration_seconds"]),"passed":result["passed"],**chat.last_diagnostics})
                     break
                 except Exception as exc:
                     duration=perf_counter()-tick; retryable=transient_error(exc)
                     attempts.append({"attempt":attempt,"error_type":type(exc).__name__,"error":str(exc),"duration_seconds":round(duration,3),**timing.snapshot(duration),"transient":retryable,"passed":False,
-                      "retrieved_sources":[chunk(x) for x in trace.initial]})
+                      "retrieved_sources":[chunk(x) for x in trace.initial],**chat.last_diagnostics})
                     if not retryable or attempt>=max_attempts: break
                     await asyncio.sleep(1.0)
             if result is None:
                 checks={"source_correct":False,"section_correct":False,"intent_correct":False,"required_terms_missing":test["required_terms"],"forbidden_terms_found":[],"false_limitation":False,"unsupported_claim":False,"unknown_ui_labels":[],"unrelated_topic":False,"procedure_order_correct":False,"citation_correct":False}
                 last=attempts[-1]
                 result={**test,"detected_intent":IntentClassifier.classify(test["question"]).value,"initial_semantic_candidates":last.get("retrieved_sources",[]),"reranked_candidates":[],"selected_document":None,"selected_sections":[],"generated_answer":"","returned_citations":[],"response_duration_seconds":last["duration_seconds"],"checks":checks,"passed":False,"root_cause_classification":"C. LLM answer failure","recommended_fix_type":"runtime review","error":last["error_type"]+": "+last.get("error","")}
+                result["diagnostics"]={key:last.get(key) for key in ("answer_mode","detected_intent","evidence_sufficient","selected_guide","selected_sections","ollama_called")}
             result["attempt_count"]=len(attempts); result["attempts"]=attempts; result["final_result"]="passed" if result["passed"] else "failed"
             completed[test["id"]]=result; ordered=[completed[x["id"]] for x in selected if x["id"] in completed]
             runtime={"chat_model":s.chat_model,"embedding_model":s.embedding_model,"vector_collection_name":s.vector_collection_name,"vector_db_path":str(s.vector_db_path),"candidate_k":s.retrieval_candidate_k,"context_max_chunks":s.chat_context_max_chunks,"elapsed_seconds":round(perf_counter()-started,3)}
