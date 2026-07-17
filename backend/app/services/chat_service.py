@@ -9,6 +9,7 @@ from app.prompt.prompt_builder import PromptBuilder
 from app.providers.base import LLMProvider
 from app.retrieval.models import RetrievalResult, RetrievedChunk
 from app.retrieval.intent import IntentClassifier, QuestionIntent
+from app.retrieval.answer_grounding import GroundedAnswerGuard
 from app.retrieval.retriever import (
     EmptyCollectionError,
     RetrievalError,
@@ -59,6 +60,7 @@ class ChatService:
         self._prompt_builder = prompt_builder
         self._retrieval_service = retrieval_service
         self._retrieval_min_similarity = retrieval_min_similarity
+        self._answer_guard = GroundedAnswerGuard()
 
     async def generate_response(self, user_message: str) -> ChatResponse:
         """Retrieve context, build a RAG prompt, and return the response."""
@@ -120,6 +122,18 @@ class ChatService:
         logger.info("RAG prompt built")
         try:
             response = await self._provider.generate_response(prompt)
+            response = self._answer_guard.ensure_grounded(
+                user_message,
+                IntentClassifier.classify(user_message),
+                relevant_chunks,
+                response,
+                navigation_hint=PromptBuilder._navigation_path_hint(
+                    relevant_chunks
+                ),
+                creation_hint=PromptBuilder._creation_control_hint(
+                    relevant_chunks
+                ),
+            )
         except Exception:
             logger.error(
                 "LLM response failed provider=%s duration_seconds=%.3f",

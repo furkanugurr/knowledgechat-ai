@@ -1,0 +1,2163 @@
+{
+  "schema_version": 1,
+  "generated_without_llm": true,
+  "guide_count": 42,
+  "question_count": 93,
+  "inventory": [
+    {
+      "title": "Ağ Geçidi İzleme",
+      "relative_path": "guides/antikor_v2/ag_yapilandirmasi/ag-gecidi-izleme.md",
+      "category": "ag_yapilandirmasi",
+      "available_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Uyarılar",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/ag-yapilandirmasi/ag-gecidi-izleme/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "Ethernet Atama",
+      "relative_path": "guides/antikor_v2/ag_yapilandirmasi/ethernet-atama.md",
+      "category": "ag_yapilandirmasi",
+      "available_sections": [
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Uyarılar",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/ag-yapilandirmasi/ethernet-atama/",
+      "usable_evidence_sections": [
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "Ethernet Durumları",
+      "relative_path": "guides/antikor_v2/ag_yapilandirmasi/ethernet-durumlari.md",
+      "category": "ag_yapilandirmasi",
+      "available_sections": [
+        "Kapsam",
+        "Alanlar",
+        "Uyarılar",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/ag-yapilandirmasi/Ethernet-Durumları/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Alanlar"
+      ]
+    },
+    {
+      "title": "IP Atama",
+      "relative_path": "guides/antikor_v2/ag_yapilandirmasi/ip-atama.md",
+      "category": "ag_yapilandirmasi",
+      "available_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/ag-yapilandirmasi/ip-atama/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "IP Havuzları",
+      "relative_path": "guides/antikor_v2/ag_yapilandirmasi/ip-havuzlari.md",
+      "category": "ag_yapilandirmasi",
+      "available_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Uyarılar",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/ag-yapilandirmasi/ip-havuzlari/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "IPv6 6to4 Tünelleme",
+      "relative_path": "guides/antikor_v2/ag_yapilandirmasi/ipv6-6to4-tunelleme.md",
+      "category": "ag_yapilandirmasi",
+      "available_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Uyarılar",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/ag-yapilandirmasi/ipv6-6to4-tunelleme/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "Sanal Ethernet - Ethernet Çifti",
+      "relative_path": "guides/antikor_v2/ag_yapilandirmasi/sanal-ethernet-ethernet-cifti.md",
+      "category": "ag_yapilandirmasi",
+      "available_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Uyarılar",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/ag-yapilandirmasi/Sanal-Ethernet-Ethernet-Cifti/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "Sanal Ethernet - Link Birleştirme",
+      "relative_path": "guides/antikor_v2/ag_yapilandirmasi/sanal-ethernet-link-birlestirme.md",
+      "category": "ag_yapilandirmasi",
+      "available_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/ag-yapilandirmasi/sanal-ethernet-link-birlestirme/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "Sanal Ethernet - Loopback",
+      "relative_path": "guides/antikor_v2/ag_yapilandirmasi/sanal-ethernet-loopback.md",
+      "category": "ag_yapilandirmasi",
+      "available_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/ag-yapilandirmasi/sanal-ethernet-loopback/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "Sanal Ethernet - PPP",
+      "relative_path": "guides/antikor_v2/ag_yapilandirmasi/sanal-ethernet-ppp.md",
+      "category": "ag_yapilandirmasi",
+      "available_sections": [
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Uyarılar",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/ag-yapilandirmasi/sanal-ethernet-ppp/",
+      "usable_evidence_sections": [
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "Sanal Ethernet - VLAN Etiketi Tabanlı",
+      "relative_path": "guides/antikor_v2/ag_yapilandirmasi/sanal-ethernet-vlan-etiketi-tabanli.md",
+      "category": "ag_yapilandirmasi",
+      "available_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Uyarılar",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/ag-yapilandirmasi/sanal-ethernet-vlan/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "Sanal Ethernet - VXLAN",
+      "relative_path": "guides/antikor_v2/ag_yapilandirmasi/sanal-ethernet-vxlan.md",
+      "category": "ag_yapilandirmasi",
+      "available_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/ag-yapilandirmasi/Sanal-Ethernet-VXLAN/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "Sanal Kablo",
+      "relative_path": "guides/antikor_v2/ag_yapilandirmasi/sanal-kablo.md",
+      "category": "ag_yapilandirmasi",
+      "available_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/ag-yapilandirmasi/sanal-kablo/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "VLAN Yapılandırması",
+      "relative_path": "guides/antikor_v2/ag_yapilandirmasi/vlan-yapilandirmasi.md",
+      "category": "ag_yapilandirmasi",
+      "available_sections": [
+        "Kapsam",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/ag-yapilandirmasi/vlan-yapilandirmasi/",
+      "usable_evidence_sections": [
+        "Kapsam"
+      ]
+    },
+    {
+      "title": "WAN Grupları",
+      "relative_path": "guides/antikor_v2/ag_yapilandirmasi/wan-gruplari.md",
+      "category": "ag_yapilandirmasi",
+      "available_sections": [
+        "Kapsam",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/ag-yapilandirmasi/wan-gruplari/",
+      "usable_evidence_sections": [
+        "Kapsam"
+      ]
+    },
+    {
+      "title": "DoS / Flood Engelleme",
+      "relative_path": "guides/antikor_v2/guvenlik_ayarlari/dos-flood-engelleme.md",
+      "category": "guvenlik_ayarlari",
+      "available_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/guvenlik-ayarlari/dos-flood-engelleme/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "Güvenlik Duvarı Ayarları",
+      "relative_path": "guides/antikor_v2/guvenlik_ayarlari/guvenlik-duvari-ayarlari.md",
+      "category": "guvenlik_ayarlari",
+      "available_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Görünür kontroller",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/guvenlik-ayarlari/guvenlik-duvari-ayarlari/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "IPS Kategori Yönetimi",
+      "relative_path": "guides/antikor_v2/guvenlik_ayarlari/ips-kategori-yonetimi.md",
+      "category": "guvenlik_ayarlari",
+      "available_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/guvenlik-ayarlari/ips-kategori-yonetimi/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "QoS - Bant Genişliği Yönetimi",
+      "relative_path": "guides/antikor_v2/guvenlik_ayarlari/qos-bant-genisligi-yonetimi.md",
+      "category": "guvenlik_ayarlari",
+      "available_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/guvenlik-ayarlari/QoS-Bant-Genisligi-Yontemi/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "QoS Kuralları",
+      "relative_path": "guides/antikor_v2/guvenlik_ayarlari/qos-kurallari.md",
+      "category": "guvenlik_ayarlari",
+      "available_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Uyarılar",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/guvenlik-ayarlari/qos-kurallari/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "Uygulama Güvenliği / IPS Ayarları",
+      "relative_path": "guides/antikor_v2/guvenlik_ayarlari/uygulama-guvenligi-ips-ayarlari.md",
+      "category": "guvenlik_ayarlari",
+      "available_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/guvenlik-ayarlari/uygulama-guvenligi-ips-ayarlari/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "Uygulama Kategori Yönetimi",
+      "relative_path": "guides/antikor_v2/guvenlik_ayarlari/uygulama-kategori-yonetimi.md",
+      "category": "guvenlik_ayarlari",
+      "available_sections": [
+        "Kapsam",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/guvenlik-ayarlari/uygulama-kategori-yonetimi/",
+      "usable_evidence_sections": [
+        "Kapsam"
+      ]
+    },
+    {
+      "title": "Web Sunucu Güvenliği",
+      "relative_path": "guides/antikor_v2/guvenlik_ayarlari/web-sunucu-guvenligi.md",
+      "category": "guvenlik_ayarlari",
+      "available_sections": [
+        "Kapsam",
+        "Alanlar",
+        "Görünür kontroller",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/guvenlik-ayarlari/web-sunucu-guvenligi/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "Güvenlik Kuralları",
+      "relative_path": "guides/antikor_v2/guvenlik_kurallari/guvenlik-kurallari.md",
+      "category": "guvenlik_kurallari",
+      "available_sections": [
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Uyarılar",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/guvenlik-ayarlari/guvenlik-kurallari/",
+      "usable_evidence_sections": [
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "Erişim / Oturum Ayarları",
+      "relative_path": "guides/antikor_v2/kullanici_yonetimi/erisim-oturum-ayarlari.md",
+      "category": "kullanici_yonetimi",
+      "available_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Uyarılar",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/kullanici-yonetimi/erisim-oturum-ayarlari/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "Kullanıcı Grupları",
+      "relative_path": "guides/antikor_v2/kullanici_yonetimi/kullanici-gruplari.md",
+      "category": "kullanici_yonetimi",
+      "available_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Uyarılar",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/kullanici-yonetimi/kullanici-gruplari/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "Kullanıcı Rolleri",
+      "relative_path": "guides/antikor_v2/kullanici_yonetimi/kullanici-rolleri.md",
+      "category": "kullanici_yonetimi",
+      "available_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/kullanici-yonetimi/kullanici-rolleri/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "Yasaklanan Kullanıcılar",
+      "relative_path": "guides/antikor_v2/kullanici_yonetimi/yasaklanan-kullanicilar.md",
+      "category": "kullanici_yonetimi",
+      "available_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/kullanici-yonetimi/yasaklanan-kullanicilar/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "Yönetim Paneli Ayarları",
+      "relative_path": "guides/antikor_v2/kullanici_yonetimi/yonetim-paneli-ayarlari.md",
+      "category": "kullanici_yonetimi",
+      "available_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Uyarılar",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/kullanici-yonetimi/yonetim-paneli-ayarlari/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "Yönetim Paneli Kullanıcıları",
+      "relative_path": "guides/antikor_v2/kullanici_yonetimi/yonetim-paneli-kullanicilari.md",
+      "category": "kullanici_yonetimi",
+      "available_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Uyarılar",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/kullanici-yonetimi/yonetim-paneli-kullanicilari/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "Dinamik NAT",
+      "relative_path": "guides/antikor_v2/nat/dinamik-nat.md",
+      "category": "nat",
+      "available_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/nat-yapilandirmasi/dinamik-nat/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "Global NAT",
+      "relative_path": "guides/antikor_v2/nat/global-nat.md",
+      "category": "nat",
+      "available_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/nat-yapilandirmasi/global-nat/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "NAT Havuzları",
+      "relative_path": "guides/antikor_v2/nat/nat-havuzlari.md",
+      "category": "nat",
+      "available_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Uyarılar",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/nat-yapilandirmasi/nat-havuzlari/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "NAT64 - IPv6/IPv4 NAT Yapılandırması",
+      "relative_path": "guides/antikor_v2/nat/nat64-ipv6-ipv4-nat-yapilandirmasi.md",
+      "category": "nat",
+      "available_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/nat-yapilandirmasi/nat64-ipv6-ipv4-nat/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "Port Yönlendirme",
+      "relative_path": "guides/antikor_v2/nat/port-yonlendirme.md",
+      "category": "nat",
+      "available_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/nat-yapilandirmasi/port-yonlendirme/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "Statik NAT",
+      "relative_path": "guides/antikor_v2/nat/statik-nat.md",
+      "category": "nat",
+      "available_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Uyarılar",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/nat-yapilandirmasi/statik-nat/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "IPSec VPN Ayarları",
+      "relative_path": "guides/antikor_v2/vpn/ipsec-vpn-ayarlari.md",
+      "category": "vpn",
+      "available_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/vpn-yonetimi/ipsec-vpn-ayarlari/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "IPSec VPN Profilleri",
+      "relative_path": "guides/antikor_v2/vpn/ipsec-vpn-profilleri.md",
+      "category": "vpn",
+      "available_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Uyarılar",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/vpn-yonetimi/ipsec-vpn-profilleri/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "İstemcisiz SSL Web VPN Ayarları",
+      "relative_path": "guides/antikor_v2/vpn/istemcisiz-ssl-web-vpn-ayarlari.md",
+      "category": "vpn",
+      "available_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Uyarılar",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/vpn-yonetimi/İstemcisiz-SSL-Web-VPN-Ayarlari/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "L2TP/PPTP VPN Ayarları",
+      "relative_path": "guides/antikor_v2/vpn/l2tp-pptp-vpn-ayarlari.md",
+      "category": "vpn",
+      "available_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Uyarılar",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/vpn-yonetimi/l2tp-pptp-vpn-ayarlari/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "Site to Site VPN Ayarları",
+      "relative_path": "guides/antikor_v2/vpn/site-to-site-vpn-ayarlari.md",
+      "category": "vpn",
+      "available_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/vpn-yonetimi/site-to-site-vpn-ayarlari/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    },
+    {
+      "title": "SSL VPN Ayarları",
+      "relative_path": "guides/antikor_v2/vpn/ssl-vpn-ayarlari.md",
+      "category": "vpn",
+      "available_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller",
+        "Uyarılar",
+        "Kaynak bilgisi"
+      ],
+      "source_url": "https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/vpn-yonetimi/ssl-vpn-ayarlari/",
+      "usable_evidence_sections": [
+        "Kapsam",
+        "Menü yolu",
+        "Kullanım adımları",
+        "Alanlar",
+        "Görünür kontroller"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "g01-procedure",
+      "question": "Ağ Geçidi İzleme nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/ag-gecidi-izleme.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "ICMP Durum Takibi",
+        "İzlenecek IP Adresi",
+        "Kaydet"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. ICMP Durum Takibi seçeneğini aktif olarak ayarlayın. 2. İzlenecek IP Adresi alanına 10.2.1.253 girin. 3. Ağ Geçidini Kapalı Olarak İşaretle seçeneğini pasif olarak ayarlayın. 4. Maksimum Paket Gecikmesi (ms) alanını doldurun. 5. Maksimum Paket Kaybı (%) alanına 10 girin. 6. İzleme Sıklığı (saniye) alanına 1 girin. 7. Paket Kaybı Zaman Aşımı (saniye) alanına 2 girin. 8. Kaydet butonuna tıklayın.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g01-fields",
+      "question": "Ağ Geçidi İzleme ekranında hangi alanlar bulunur?",
+      "intent": "field_listing",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/ag-gecidi-izleme.md",
+      "expected_section": "Alanlar",
+      "required_terms": [
+        "Arayüz",
+        "Ethernet",
+        "Ağ Geçidi"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Arayüz` (Arayüz sütunu): Ağ geçidi izleme ayarları için kullanılan arayüz adı - `Ethernet` (Ethernet sütunu): Ağ geçidi izleme ayarları için kullanılan Ethernet portu - `Ağ Geçidi` (Ağ Geçidi sütunu): Ağ geçidi izleme ayarları için kullanılan ağ geçidi adresi - `ICMP Durum Takibi` (ICMP Durum Takibi sütunu): Ağ geçidi izleme ayarları için ICMP durumu takibi - `İzlenecek IP Adresi` (İzlenecek IP Adresi sütunu): Ağ ",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g02-nav",
+      "question": "Ethernet Atama için kaynakta verilen menü yolu nedir?",
+      "intent": "navigation",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/ethernet-atama.md",
+      "expected_section": "Menü yolu",
+      "required_terms": [
+        "Ethernet Atama",
+        "DMZ"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Ethernet Atama > DMZ > Yeni Kayıt` - `Ethernet Atama > PPPoE Ekle Yeni Kayıt` - `Ethernet Durumları > IP Ayarları` - `IP Ayarları > Kullanıcı Bilgileri`",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g02-procedure",
+      "question": "Ethernet Atama nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/ethernet-atama.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Ethernet portunun",
+        "VRF",
+        "Otomatik IPv4 AI"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Ethernet Durumları panelindeki 'Aktar' butonlarını kullanarak durumu, güvenlik bölgesini ve arayüzü aktarın. 2. Güvenlik Bölgesi, Arayüz, Ethernet Adı, MTU, VRF Adı alanlarını doldurun. 3. Web Arayüzü Erişimi ve Cluster Üyeliği alanlarını 'Aktar' butonları ile aktarın. 4. Cluster Ethernet Adı ve Açıklama alanlarını doldurun. 5. IPv4 Ayarları panelinde IPv4 adresi, DHCPv4 havuzu modu, başlangıç, bitiş, ağ geçidi ve",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g03-fields",
+      "question": "Ethernet Durumları ekranında hangi alanlar bulunur?",
+      "intent": "field_listing",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/ethernet-durumlari.md",
+      "expected_section": "Alanlar",
+      "required_terms": [
+        "Yönetsel Durumu",
+        "Ağ Kablosu Durumu",
+        "Ethernet Adı"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `#` (Ethernet Durumları paneli): Ethernet arayüzünün numarasını gösterir. - `Yönetsel Durumu` (Ethernet Durumları paneli): Ethernet arayüzünün yönetimi durumunu gösterir. - `Ağ Kablosu Durumu` (Ethernet Durumları paneli): Ethernet arayüzünün kablosu takılı olup olmadığını gösterir. - `Ethernet Adı` (Ethernet Durumları paneli): Ethernet arayüzünün ismini gösterir. - `Adı` (Ethernet Durumları paneli): Ethernet arayüz",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g03-purpose-2",
+      "question": "Ethernet Durumları ekranında Yönetsel Durumu ne işe yarar?",
+      "intent": "field_purpose",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/ethernet-durumlari.md",
+      "expected_section": "Alanlar",
+      "required_terms": [
+        "Yönetsel Durumu"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `#` (Ethernet Durumları paneli): Ethernet arayüzünün numarasını gösterir. - `Yönetsel Durumu` (Ethernet Durumları paneli): Ethernet arayüzünün yönetimi durumunu gösterir. - `Ağ Kablosu Durumu` (Ethernet Durumları paneli): Ethernet arayüzünün kablosu takılı olup olmadığını gösterir. - `Ethernet Adı` (Ethernet Durumları paneli): Ethernet arayüzünün ismini gösterir. - `Adı` (Ethernet Durumları paneli): Ethernet arayüz",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g04-nav",
+      "question": "IP Atama için kaynakta verilen menü yolu nedir?",
+      "intent": "navigation",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/ip-atama.md",
+      "expected_section": "Menü yolu",
+      "required_terms": [
+        "IP Atama"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `IP Atama`",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g04-procedure",
+      "question": "IP Atama nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/ip-atama.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Network",
+        "IP Adresi",
+        "Açıklama"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Network seçeneğini kullanarak ağ seçin. 2. IP Adresi alanına IP adresini girin. 3. Durum seçeneğini aktif olarak belirtin. 4. Network seçeneğini WAN1 olarak ayarlayın. 5. Adres Ailesi seçeneğini IPv4 olarak belirleyin. 6. IP Adresi alanına IPv4 IP adresini girin. 7. Cluster Üyeliği seçeneğini aktif olarak belirtin. 8. Açıklama alanını gerekli bilgilerle doldurun veya boş bırakın.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g05-nav",
+      "question": "IP Havuzları için kaynakta verilen menü yolu nedir?",
+      "intent": "navigation",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/ip-havuzlari.md",
+      "expected_section": "Menü yolu",
+      "required_terms": [
+        "IP Havuzları"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `IP Havuzları`",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g05-procedure",
+      "question": "IP Havuzları nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/ip-havuzlari.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Ethernet ataması yapın",
+        "IP Bloğunu girin",
+        "Açıklamayı girin (isteğe bağlı)"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Ethernet ataması yapın. 2. IP Bloğunu girin. 3. Ethernet portunu seçin. 4. IPv4 veya IPv6 adres ailesini seçin. 5. IPv4 IP bloğunu girin. 6. Açıklamayı girin (isteğe bağlı).",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g06-procedure",
+      "question": "IPv6 6to4 Tünelleme nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/ipv6-6to4-tunelleme.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Tünelleme"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Tünelleme modunu seçmek için 'Tünelleme' etiketini kullanın. 2. Çıkış IP Adresi düşümünü kullanarak IPv4 çıkış IP adresini seçin veya otomatik olarak belirlenmesini isteyin. 3. Tünelleme durumunu etkinleştirin veya devre dışı bırakın.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g06-fields",
+      "question": "IPv6 6to4 Tünelleme ekranında hangi alanlar bulunur?",
+      "intent": "field_listing",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/ipv6-6to4-tunelleme.md",
+      "expected_section": "Alanlar",
+      "required_terms": [
+        "Çıkış IP Adresi",
+        "6to4 IPv6 Adresi"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Çıkış IP Adresi` (IPv6 6to4 Tünelleme paneli): IPv4 çıkış IP adresini seçmek için kullanılan düşüm - `6to4 IPv6 Adresi` (IPv6 6to4 Tünelleme paneli): 6to4 IPv6 adresini girerek kullanılan alan",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g07-procedure",
+      "question": "Sanal Ethernet - Ethernet Çifti nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/sanal-ethernet-ethernet-cifti.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Açıklama"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Adı, Port 1 ve Port 2 alanlarını doldurun. 2. Açıklama alanına gerekli bilgileri girin.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g07-fields",
+      "question": "Sanal Ethernet - Ethernet Çifti ekranında hangi alanlar bulunur?",
+      "intent": "field_listing",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/sanal-ethernet-ethernet-cifti.md",
+      "expected_section": "Alanlar",
+      "required_terms": [
+        "Adı",
+        "Port 1",
+        "Port 2"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Adı` (Sanal Ethernet - Ethernet Çifti): Ethernet çiftinin adını girin. - `Port 1` (Sanal Ethernet - Ethernet Çifti): Port 1'ini girin. - `Port 2` (Sanal Ethernet - Ethernet Çifti): Port 2'ni girin. - `Açıklama` (Sanal Ethernet - Ethernet Çifti): Ethernet çiftinin açıklamasını girin.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g08-procedure",
+      "question": "Sanal Ethernet - Link Birleştirme nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/sanal-ethernet-link-birlestirme.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Birleştirme",
+        "Bağlantının"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Birleştirme türünü seçin. 2. Bağlantının adını girin.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g08-fields",
+      "question": "Sanal Ethernet - Link Birleştirme ekranında hangi alanlar bulunur?",
+      "intent": "field_listing",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/sanal-ethernet-link-birlestirme.md",
+      "expected_section": "Alanlar",
+      "required_terms": [
+        "Birleştirme Türü",
+        "Adı",
+        "Span Port"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Birleştirme Türü` (Sanal Ethernet - Link Birleştirme paneli): Bağlantı türünü seçmek için - `Adı` (Sanal Ethernet - Link Birleştirme paneli): Bağlantının adını girin - `Span Port` (Sanal Ethernet - Link Birleştirme paneli): Span portunu girin - `MTU` (Sanal Ethernet - Link Birleştirme paneli): Maximum Transfer Unit değerini girin",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g09-nav",
+      "question": "Sanal Ethernet - Loopback için kaynakta verilen menü yolu nedir?",
+      "intent": "navigation",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/sanal-ethernet-loopback.md",
+      "expected_section": "Menü yolu",
+      "required_terms": [
+        "Sanal Ethernet - Loopback"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Sanal Ethernet - Loopback`",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g09-procedure",
+      "question": "Sanal Ethernet - Loopback nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/sanal-ethernet-loopback.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Loopback ekleme: Ekle",
+        "Loopback düzenleme: Düzenle"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Loopback ekleme: Ekle butonuna tıklayın ve Loopback bilgilerini girin. 2. Loopback düzenleme: Düzenle butonuna tıklayarak Loopback bilgilerini düzenleyin. 3. Loopback adını girin.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g10-nav",
+      "question": "Sanal Ethernet - PPP için kaynakta verilen menü yolu nedir?",
+      "intent": "navigation",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/sanal-ethernet-ppp.md",
+      "expected_section": "Menü yolu",
+      "required_terms": [
+        "Sanal Ethernet - PPP",
+        "Yeni Kayıt"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Sanal Ethernet - PPP` - `Ethernet Atama menüsüne tıklanır -> Kullanılacak olan ethernet arayüzü seçilir -> Ethernet Adı; Sanal Ethernet - PPP ‘de otomatik olarak üretilen değer seçilmelidir. (Bu örnek için ppp1) -> WAN tarafından web arayüzüne erişmek istiyorsanız; Web Arayüz Erişimi Aktif edilir -> Açıklama yazılır -> IP Ayarlarında ise Otomatik IPv4 Al ve Otomatik IPv6 Al mutlaka işaretlenmelidir -> Ethernet Ata",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g10-procedure",
+      "question": "Sanal Ethernet - PPP nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/sanal-ethernet-ppp.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Bağlantı Ekle",
+        "Modem Tipi",
+        "Kaydet"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Yenile 2. Ekle 3. Bağlantı Ekle butonuna tıklayın. 4. Modem Tipi seçeneğini belirleyin. 5. Ethernet Atama menüsüne tıklanır 6. Kullanılacak olan ethernet arayüzü seçilir 7. Ethernet Adı; Sanal Ethernet - PPP ‘de otomatik olarak üretilen değer seçilmelidir. (Bu örnek için ppp1) 8. WAN tarafından web arayüzüne erişmek istiyorsanız; Web Arayüz Erişimi Aktif edilir 9. Açıklama yazılır 10. IP Ayarlarında ise Otomatik I",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g11-procedure",
+      "question": "Sanal Ethernet - VLAN Etiketi Tabanlı nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/sanal-ethernet-vlan-etiketi-tabanli.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Ethernet"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Yenile butonu ile listeyi yeniden yükleme. 2. Ekle butonu ile yeni VLAN etiketi eklemek için. 3. Düzenle butonu ile kayıtları düzenleme. 4. Sil butonu ile kayıtları silmek için. 5. Ethernet adını seçin. 6. VLAN ID'sini girin.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g11-fields",
+      "question": "Sanal Ethernet - VLAN Etiketi Tabanlı ekranında hangi alanlar bulunur?",
+      "intent": "field_listing",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/sanal-ethernet-vlan-etiketi-tabanli.md",
+      "expected_section": "Alanlar",
+      "required_terms": [
+        "Göster/Gizle",
+        "Sayfa Başı Kayıt Sayısı",
+        "Ethernet Adı"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Göster/Gizle` (Sanal Ethernet - VLAN Etiketi Tabanlı): Liste gösterimi seçimi - `Sayfa Başı Kayıt Sayısı` (Sanal Ethernet - VLAN Etiketi Tabanlı): Sayfa başına kayıtların sayısı - `Ethernet Adı` (Ethernet Adı): Ethernet adını seçmek için kullanılan bir dropdown. - `VLAN ID` (VLAN ID): VLAN ID'sini girerek VLAN'ın tanımlanmasını sağlar.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g12-procedure",
+      "question": "Sanal Ethernet - VXLAN nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/sanal-ethernet-vxlan.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Adı",
+        "VNI - VXLAN Ağ Kimliği",
+        "Kaydet"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Adı alanına sanal Ethernet - VXLAN'ın adını girin. 2. VNI - VXLAN Ağ Kimliği alanına VXLAN ağ kimliğini girin. 3. Kaynak IP alanına kaynak IP adresini girin. 4. Hedef IP alanına hedef IP adresini girin. 5. Kaynak IP adresini girin. 6. Hedef IP adresini girin. 7. Açıklama alanına gerekli bilgileri girin. 8. Kaydet butonuna tıklayın.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g12-fields",
+      "question": "Sanal Ethernet - VXLAN ekranında hangi alanlar bulunur?",
+      "intent": "field_listing",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/sanal-ethernet-vxlan.md",
+      "expected_section": "Alanlar",
+      "required_terms": [
+        "Adı",
+        "VNI - VXLAN Ağ Kimliği",
+        "Kaynak IP"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Adı` (Sanal Ethernet - VXLAN paneli): Sanal Ethernet - VXLAN'ın adını girin - `VNI - VXLAN Ağ Kimliği` (Sanal Ethernet - VXLAN paneli): VXLAN ağ kimliğini girin - `Kaynak IP` (Sanal Ethernet - VXLAN paneli): Kaynak IP adresini girin - `Hedef IP` (Sanal Ethernet - VXLAN paneli): Hedef IP adresini girin - `Açıklama` (Sanal Ethernet - VXLAN): Ağ için açıklama yapın. Bu, VXLAN ağının ne işe yaradığını açıklayabilir.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g13-procedure",
+      "question": "Sanal Kablo nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/sanal-kablo.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Yenile",
+        "Adı"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Yenile butonuna tıklayın. 2. Adı alanına sanal kablonun adını girin. 3. Üye 1 ve Üye 2 seçeneklerinden sanal kablonun ilk ve ikinci üyesini seçin. 4. MTU değerini girin. 5. Kaydet düğmesine tıklayarak bilgileri kaydedin.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g13-fields",
+      "question": "Sanal Kablo ekranında hangi alanlar bulunur?",
+      "intent": "field_listing",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/sanal-kablo.md",
+      "expected_section": "Alanlar",
+      "required_terms": [
+        "Göster/Gizle",
+        "Sayfa Başı Kayıt Sayısı",
+        "Adı"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Göster/Gizle` (Sanal Kablo paneli): Liste öğelerini göster veya gizleme seçenekleri. - `Sayfa Başı Kayıt Sayısı` (Sanal Kablo paneli): Sayfada görüntülenecek kayıtların sayısı. - `Adı` (Durum): Sanal kablonun adını girin. - `Üye 1` (Durum): Sanal kablonun ilk üyesini seçin. - `Üye 2` (Durum): Sanal kablonun ikinci üyesini seçin. - `MTU` (Durum): Maximum Transfer Unit değerini girin.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g14-scope-1",
+      "question": "VLAN Yapılandırması nedir?",
+      "intent": "general_information",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/vlan-yapilandirmasi.md",
+      "expected_section": "Kapsam",
+      "required_terms": [
+        "VLAN"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "Bu kılavuz, Antikor cihazında VLAN yapılandırması hakkında bilgi sunmaktadır. VLAN (Sanal Yerel Alan Ağı), yerel ağ içerisinde çalışma grupları oluşturmak ve yerel ağı anahtarlarla bölmek için kullanılır. Antikor VLAN tanımlarının yapıldığı bölümdür; switchlerde yapılan VLAN ayarları bu bölümde düzenlenir. Hangi VLAN tagına hangi IP adres grubunun dağıtılacağı belirlenir ve hangi IP adresine NAT yapılacağı Global NAT",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g14-scope-2",
+      "question": "VLAN Yapılandırması hakkında kaynak ne açıklıyor?",
+      "intent": "general_information",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/vlan-yapilandirmasi.md",
+      "expected_section": "Kapsam",
+      "required_terms": [
+        "VLAN"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "Bu kılavuz, Antikor cihazında VLAN yapılandırması hakkında bilgi sunmaktadır. VLAN (Sanal Yerel Alan Ağı), yerel ağ içerisinde çalışma grupları oluşturmak ve yerel ağı anahtarlarla bölmek için kullanılır. Antikor VLAN tanımlarının yapıldığı bölümdür; switchlerde yapılan VLAN ayarları bu bölümde düzenlenir. Hangi VLAN tagına hangi IP adres grubunun dağıtılacağı belirlenir ve hangi IP adresine NAT yapılacağı Global NAT",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g15-scope-1",
+      "question": "WAN Grupları nedir?",
+      "intent": "general_information",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/wan-gruplari.md",
+      "expected_section": "Kapsam",
+      "required_terms": [
+        "WAN"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "Birden fazla WAN bacağı bulunan ortamlarda, yük grupları kullanılması önerilir; bu sayede yük dağıtımı yapılabilmekte ve aynı IP adresinden gelen tüm istekler için aynı ağ geçidi kullanılabilmektedir.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g15-scope-2",
+      "question": "WAN Grupları hakkında kaynak ne açıklıyor?",
+      "intent": "general_information",
+      "expected_relative_path": "guides/antikor_v2/ag_yapilandirmasi/wan-gruplari.md",
+      "expected_section": "Kapsam",
+      "required_terms": [
+        "WAN"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "Birden fazla WAN bacağı bulunan ortamlarda, yük grupları kullanılması önerilir; bu sayede yük dağıtımı yapılabilmekte ve aynı IP adresinden gelen tüm istekler için aynı ağ geçidi kullanılabilmektedir.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g16-nav",
+      "question": "DoS / Flood Engelleme için kaynakta verilen menü yolu nedir?",
+      "intent": "navigation",
+      "expected_relative_path": "guides/antikor_v2/guvenlik_ayarlari/dos-flood-engelleme.md",
+      "expected_section": "Menü yolu",
+      "required_terms": [
+        "DoS / Flood Engelleme"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `DoS / Flood Engelleme`",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g16-procedure",
+      "question": "DoS / Flood Engelleme nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/guvenlik_ayarlari/dos-flood-engelleme.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Kaydet"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Durum: Pasif 2. Kayıt ID: b0oWChR7Kcvu 3. Kaynak Adres: (Adet: 2) 4. Servisler: Servis: DNS 5. Hedef Adres: (Adet: 2) 6. Limit Kriteri: Eşleşen Paket Sayısı 7. Limit: 1000 8. Süre (sn): 5 9. Açıklama: DNS Flood 10. Kaydet butonuna tıklayın.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g17-procedure",
+      "question": "Güvenlik Duvarı Ayarları nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/guvenlik_ayarlari/guvenlik-duvari-ayarlari.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Trafik Normalizasyonu"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Trafik Normalizasyonu seçeneğini etkinleştirmek için 'Açık' seçeneğine tıklayın. 2. Parçalanmış paketleri birleştirmek için 'Açık' seçeneğine tıklayın. 3. Rastgele IP identifikatörünü etkinleştirmek için 'Açık' seçeneğine tıklayın. 4. TCP normalizasyonunu etkinleştirmek için 'Açık' seçeneğine tıklayın.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g17-purpose-2",
+      "question": "Güvenlik Duvarı Ayarları ekranında Logla kontrolü ne işe yarar?",
+      "intent": "control_purpose",
+      "expected_relative_path": "guides/antikor_v2/guvenlik_ayarlari/guvenlik-duvari-ayarlari.md",
+      "expected_section": "Görünür kontroller",
+      "required_terms": [
+        "Logla"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Trafik Normalizasyonu`: Gelen ve giden paketlerin normalleştirilmesini etkinleştirir veya devre dışı bırakır. - `Logla`: Normalleştirilmiş paket bilgilerinin loga kaydedilip kaydedilmeyeceği seçeneğidir. - `Parçalanmış Paketleri Birleştir`: Parçalanmış paketlerin normalleştirilmesini etkinleştirir veya devre dışı bırakır. - `Rastgele IP ID`: Rastgele IP identifikatörünün normalleştirilmesini etkinleştirir veya dev",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g18-procedure",
+      "question": "IPS Kategori Yönetimi nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/guvenlik_ayarlari/ips-kategori-yonetimi.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Yeni bir kategori eklemek için '+ Ekle'",
+        "Elle Veri Girişi",
+        "Kaynağın 'İnternetten Otomatik Al'"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Yeni bir kategori eklemek için '+ Ekle' butonuna tıklayın. 2. Elle Veri Girişi seçeneğini kullanarak verilerin manuel olarak girilmesini sağlayın. 3. Kategori Adı alanına yeni kategorinin adını girin. 4. Kaynağın 'İnternetten Otomatik Al' seçeneğini kullanarak verileri almak için.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g18-fields",
+      "question": "IPS Kategori Yönetimi ekranında hangi alanlar bulunur?",
+      "intent": "field_listing",
+      "expected_relative_path": "guides/antikor_v2/guvenlik_ayarlari/ips-kategori-yonetimi.md",
+      "expected_section": "Alanlar",
+      "required_terms": [
+        "Sayfa Başı Kayıt Sayısı",
+        "Kategori Adı",
+        "Varsayılan kapalı imzaları da getir"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Sayfa Başı Kayıt Sayısı` (IPS Kategori Yönetimi paneli): Sayfada gösterilecek kayıtların sayısı seçimi. - `Kategori Adı` (panel: Kategoriler - Yeni Kayıt): Yeni kategorinin adını girmek için kullanılan alan. - `Varsayılan kapalı imzaları da getir` (panel: Kategoriler - Yeni Kayıt): varsayılan olarak kapalı imzaların da alınması için kullanılan checkbox. - `Harici Kaynaklar` (Harici Kaynaklar): Verilerin nasıl alın",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g19-procedure",
+      "question": "QoS - Bant Genişliği Yönetimi nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/guvenlik_ayarlari/qos-bant-genisligi-yonetimi.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Yeni bir QoS uygulaması eklemek için '+ Ekle'",
+        "Adı",
+        "Bant Genişliği"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. VERİ 2. YAYIN 3. SES 4. Listeyi yeniden yükleme. 5. Yeni bir QoS uygulaması eklemek için '+ Ekle' butonuna tıklayın. 6. Adı alanına kaydın adını girin. 7. Tür düşümünden kaydın türünü seçin. 8. CIDR Maskesi alanına CIDR maskesini girin. 9. Bant Genişliği alanına bant genişliğini girin. 10. Kaydet düğmesine basarak kaydı kaydedin.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g19-fields",
+      "question": "QoS - Bant Genişliği Yönetimi ekranında hangi alanlar bulunur?",
+      "intent": "field_listing",
+      "expected_relative_path": "guides/antikor_v2/guvenlik_ayarlari/qos-bant-genisligi-yonetimi.md",
+      "expected_section": "Alanlar",
+      "required_terms": [
+        "Göster/Gizle",
+        "Sayfa Başı Kayıt Sayısı",
+        "Tamam"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Göster/Gizle` (panel_name): Listeyi göster veya gizleme seçenekleri. - `Sayfa Başı Kayıt Sayısı` (panel_name): Sayfada görüntülenecek kayıtların sayısı. - `Tamam` (panel_name): Seçilen filtreleri uygulama ve listeyi güncellemek için. - `Filtrele` (panel_name): Listeye filtre uygulamak için. - `Filtreyi Temizle` (panel_name): Filtreleri temizlemek için. - `Adı` (Adı): Bant genişliği yönetimi için eklenecek kaydın a",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g20-procedure",
+      "question": "QoS Kuralları nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/guvenlik_ayarlari/qos-kurallari.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Göster/Gizle",
+        "Sayfa Başı Kayıt Sayısı değerini belirledikten sonra 'Tamam'",
+        "Kaydet"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Göster/Gizle seçeneğini kullanarak sütunları göster veya gizleyin. 2. Sayfa Başı Kayıt Sayısı değerini belirledikten sonra 'Tamam' butonuna tıklayın. 3. Durum seçeneğini aktif olarak ayarlayın. 4. Gelen Kuyruğu ve Giden Kuyruğu alanlarını doldurun. 5. Kaynak Adres ve Hedef Adres alanlarını doldurun. 6. Servisler seçeneğini belirleyin. 7. ToS/DSCP değerini seçin. 8. Zaman Dilimleri alanını doldurun. 9. Kaydet buton",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g20-fields",
+      "question": "QoS Kuralları ekranında hangi alanlar bulunur?",
+      "intent": "field_listing",
+      "expected_relative_path": "guides/antikor_v2/guvenlik_ayarlari/qos-kurallari.md",
+      "expected_section": "Alanlar",
+      "required_terms": [
+        "Göster/Gizle",
+        "Sayfa Başı Kayıt Sayısı",
+        "Gelen Kuyruğu"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Göster/Gizle -` (QoS Kuralları paneli): Göster/Gizle - - `Sayfa Başı Kayıt Sayısı` (QoS Kuralları paneli): Sayfa Başı Kayıt Sayısı - `Gelen Kuyruğu` (Genel Kurallar): Gelen veri paketlerinin hangi kuyrukta işleme alındığını belirler. - `Giden Kuyruğu` (Genel Kurallar): Giden veri paketlerinin hangi kuyrukta işleme alındığını belirler. - `Kaynak Adres` (IP Kuralları): QoS kurallarının uygulanacağı kaynak IP adresin",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g21-procedure",
+      "question": "Uygulama Güvenliği / IPS Ayarları nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/guvenlik_ayarlari/uygulama-guvenligi-ips-ayarlari.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Networkler"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Networkler adını girin ve kaydedin. 2. Uygulama Tespit Servisi açık/kapalı olarak ayarlayın. 3. Bağlantı Limitleme açık/kapalı olarak ayarlayın.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g21-fields",
+      "question": "Uygulama Güvenliği / IPS Ayarları ekranında hangi alanlar bulunur?",
+      "intent": "field_listing",
+      "expected_relative_path": "guides/antikor_v2/guvenlik_ayarlari/uygulama-guvenligi-ips-ayarlari.md",
+      "expected_section": "Alanlar",
+      "required_terms": [
+        "Networkler",
+        "Uygulama Tespit Servisi",
+        "Bağlantı Limitleme"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Networkler` (General): Network adı girin. - `Uygulama Tespit Servisi` (General): Açık/Kapalı seçeneği var. - `Bağlantı Limitleme` (General): Açık/Kapalı seçeneği var.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g22-scope-1",
+      "question": "Uygulama Kategori Yönetimi nedir?",
+      "intent": "general_information",
+      "expected_relative_path": "guides/antikor_v2/guvenlik_ayarlari/uygulama-kategori-yonetimi.md",
+      "expected_section": "Kapsam",
+      "required_terms": [
+        "Uygulama"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "Uygulama Güvenliği için kategori yönetimi özelleştirmesi yapılabilmektedir. Ayrıca Uygulama Güvenliği için, Antikor’da 41 adet ön tanımlı kategori olarak bulunmaktadır.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g22-scope-2",
+      "question": "Uygulama Kategori Yönetimi hakkında kaynak ne açıklıyor?",
+      "intent": "general_information",
+      "expected_relative_path": "guides/antikor_v2/guvenlik_ayarlari/uygulama-kategori-yonetimi.md",
+      "expected_section": "Kapsam",
+      "required_terms": [
+        "Uygulama"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "Uygulama Güvenliği için kategori yönetimi özelleştirmesi yapılabilmektedir. Ayrıca Uygulama Güvenliği için, Antikor’da 41 adet ön tanımlı kategori olarak bulunmaktadır.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g23-fields",
+      "question": "Web Sunucu Güvenliği ekranında hangi alanlar bulunur?",
+      "intent": "field_listing",
+      "expected_relative_path": "guides/antikor_v2/guvenlik_ayarlari/web-sunucu-guvenligi.md",
+      "expected_section": "Alanlar",
+      "required_terms": [
+        "İstek Gövdesi Boyut Limiti",
+        "Ek Dosyasız İstek Gövdesi Limiti",
+        "Yanıt Gövdesi Boyut Limiti"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `İstek Gövdesi Boyut Limiti` (İstek Gövdesi Boyut Limiti): 10 MB - `Ek Dosyasız İstek Gövdesi Limiti` (Ek Dosyasız İstek Gövdesi Limiti): 128 KB - `Yanıt Gövdesi Boyut Limiti` (Yanıt Gövdesi Boyut Limiti): 5120 KB - `Daha Büyük Yanıt Gövdesini` (Daha Büyük Yanıt Gövdesini): Parça Parça İşle - `REQUEST-APPLICATION-ATTACK-JAVA` (Kategoriler): Java tabanlı uygulama saldırıları için aktif/passif durumunu gösteren kontr",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g23-purpose-2",
+      "question": "Web Sunucu Güvenliği ekranında Saldırı Tespit Hassasiyeti kontrolü ne işe yarar?",
+      "intent": "control_purpose",
+      "expected_relative_path": "guides/antikor_v2/guvenlik_ayarlari/web-sunucu-guvenligi.md",
+      "expected_section": "Görünür kontroller",
+      "required_terms": [
+        "Saldırı Tespit Hassasiyeti"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Çalışma Modu`: Saldırı Tespit ve Önleme - `Saldırı Tespit Hassasiyeti`: 4 - `Kaydet`: Değişiklikleri kaydeden buton. - `Temizle`: Değişiklikleri temizleyen buton.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g24-nav",
+      "question": "Güvenlik Kuralları için kaynakta verilen menü yolu nedir?",
+      "intent": "navigation",
+      "expected_relative_path": "guides/antikor_v2/guvenlik_kurallari/guvenlik-kurallari.md",
+      "expected_section": "Menü yolu",
+      "required_terms": [
+        "IP Kuralları",
+        "Ağ Tanımları"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Genel Kurallar` - `IP Kuralları > Ağ Tanımları` - `IP Kuralları > Kaynak Güvenlik Bölgesi` - `Hedef Adres > Servisler > IPv4` - `IPv4 - Kayıt Ekleme Formu`",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g24-procedure",
+      "question": "Güvenlik Kuralları nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/guvenlik_kurallari/guvenlik-kurallari.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Grupu seçin ve kaydetmek için Kaydet",
+        "Kaynak Adres",
+        "IPv4"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Grupu seçin ve kaydetmek için Kaydet butonuna tıklayın. 2. Kaynak Güvenlik Bölgesi menüsünden bir güvenlik bölge seçin. 3. Hedef Güvenlik Bölgesi menüsünden bir güvenlik bölge seçin. 4. Servisler menüsünden bir hizmet seçin. 5. Kaynak Adres alanına IP adresini girin veya listedeki IP'leri seçin. 6. Hedef Adres alanına IP adresini girin veya listedeki IP'leri seçin. 7. Zaman Dilimleri alanında uygun zaman dilimi se",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g25-nav",
+      "question": "Erişim / Oturum Ayarları için kaynakta verilen menü yolu nedir?",
+      "intent": "navigation",
+      "expected_relative_path": "guides/antikor_v2/kullanici_yonetimi/erisim-oturum-ayarlari.md",
+      "expected_section": "Menü yolu",
+      "required_terms": [
+        "Erişim / Oturum Ayarları",
+        "Erişebilen Ağlar - Yeni Kayıt"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Giriş Feragatnamesi` - `Oturum Ayarları` - `Erişim / Oturum Ayarları > Erişebilen Ağlar - Yeni Kayıt`",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g25-procedure",
+      "question": "Erişim / Oturum Ayarları nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/kullanici_yonetimi/erisim-oturum-ayarlari.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Trafiği Logla",
+        "Sertifika Bazlı Kimlik Doğrulama",
+        "IP adresi girin ve Düzenle"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Trafiği Logla seçeneğini etkinleştirmek için checkbox'u işaretleyin. 2. Sertifika Bazlı Kimlik Doğrulama seçeneğini etkinleştirmek için checkbox'u işaretleyin. 3. Harici Kaynaklardan Kimlik Doğrulama seçeneğini etkinleştirmek için checkbox'u işaretleyin. 4. Eş Zamanlı Oturum Sayısı değeri 100 olarak ayarlayın. 5. DOS Bağlantı Limitleme seçeneğini etkinleştirmek için checkbox'u işaretleyin. 6. QoS Hız Limitleme seç",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g26-nav",
+      "question": "Kullanıcı Grupları için kaynakta verilen menü yolu nedir?",
+      "intent": "navigation",
+      "expected_relative_path": "guides/antikor_v2/kullanici_yonetimi/kullanici-gruplari.md",
+      "expected_section": "Menü yolu",
+      "required_terms": [
+        "Kullanıcı Yönetimi",
+        "Kullanıcı Grupları"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Kullanıcı Yönetimi > Kullanıcı Grupları` - `Yetkiler ve Roller > Rol Düzenle` - `Rol Düzenle > Kullanıcı Rolleri sayfasından tanımlanmış olan rollerden biri seçilir.`",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g26-procedure",
+      "question": "Kullanıcı Grupları nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/kullanici_yonetimi/kullanici-gruplari.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Kaydet",
+        "Rol Düzenle"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Hepsi ve Kapsam Testi kullanıcı gruplarını görüntüleyin. 2. Yetkiler ve Roller butonunu kullanarak gruplara özel yetki ve roller atayın. 3. Adı ve Açıklama alanlarını doldurun. 4. Kaydet butonuna tıklayın. 5. Rol Düzenle butonuna tıklayın. 6. Kullanıcı Rolleri sayfasından tanımlanmış olan rollerden biri seçin. 7. Sistem Yönetimi 8. Kullanıcı Yönetimi 9. Tanımlamalar 10. Dmz Yönetimi 11. Filtreleme Yönetimi 12. İzl",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g27-nav",
+      "question": "Kullanıcı Rolleri için kaynakta verilen menü yolu nedir?",
+      "intent": "navigation",
+      "expected_relative_path": "guides/antikor_v2/kullanici_yonetimi/kullanici-rolleri.md",
+      "expected_section": "Menü yolu",
+      "required_terms": [
+        "Kullanıcı Yönetimi",
+        "Kullanıcı Rolleri"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Kullanıcı Yönetimi > Kullanıcı Rolleri` - `Yetkiler > Tanımlamalar` - `Rollere ait tanımlar tek başına seçilebildiği gibi seçilen nesnenin (görüntle, ekle, güncelle, sil) ayrıca detaylı olarak tanımlanabilmektedir. Admin haricindeki diğer Antikor yöneticilerinin tanımları uygula yapabilmesi için “Uygulanacak İşlem Listesi” seçeneğinin de seçili olması gereklidir.`",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g27-procedure",
+      "question": "Kullanıcı Rolleri nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/kullanici_yonetimi/kullanici-rolleri.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Kaydet",
+        "Uygulanacak İşlem Listesi"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Adı ve açıklama alanlarını doldurun. 2. Kaydet butonuna tıklayın. 3. Hepsi > Tanımlamalar > Ağ Tanımları > Görüntüle 4. Hepsi > Tanımlamalar > Hotspot İstemcileri > Ekle 5. Hepsi > Tanımlamalar > İstemci Grupları > Güncelle 6. Hepsi > Tanımlamalar > İstemci Tanımları > Sil 7. Uygulanacak İşlem Listesi seçeneğini seçin.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g28-procedure",
+      "question": "Yasaklanan Kullanıcılar nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/kullanici_yonetimi/yasaklanan-kullanicilar.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Yenile butonu ile verilerin",
+        "Yasağı Kaldır butonu ile"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Yenile butonu ile verilerin yeniden yüklenebilir. 2. Yasağı Kaldır butonu ile önemli bir kullanıcı için yasağı kaldırılabilir.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g28-fields",
+      "question": "Yasaklanan Kullanıcılar ekranında hangi alanlar bulunur?",
+      "intent": "field_listing",
+      "expected_relative_path": "guides/antikor_v2/kullanici_yonetimi/yasaklanan-kullanicilar.md",
+      "expected_section": "Alanlar",
+      "required_terms": [
+        "IP Adresi",
+        "Giriş Deneme Sayısı",
+        "Denenen Kullanıcı Adları"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `IP Adresi` (Yasaklanan Kullanıcılar paneli): Gösterilen IP adresi bilgisi. - `Giriş Deneme Sayısı` (Yasaklanan Kullanıcılar paneli): Denenen kullanıcı adları için giriş deneme sayısı. - `Denenen Kullanıcı Adları` (Yasaklanan Kullanıcılar paneli): Gösterilen denenen kullanıcı adı bilgisi. - `Yasak Başlangıcı` (Yasaklanan Kullanıcılar paneli): Kullanıcının yasağına başlama tarihi ve zamanı. - `Son 5 Oturum` (Yasakla",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g29-procedure",
+      "question": "Yönetim Paneli Ayarları nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/kullanici_yonetimi/yonetim-paneli-ayarlari.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Atanacak Ethernet",
+        "Güncelleme için Çıkış Portu",
+        "Kaydet"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Web Arayüzü Erişim Protokolü seçimi yapın. 2. Servis Portu Numarası girin. 3. Yönetim Paneli için Cpu Rezervasyonu ve Bağımsız Yönetim Altyapısı seçeneklerini ayarlayın. 4. Atanacak Ethernet seçeneğini belirleyin. 5. IP Adresi ve Varsayılan Ağ Geçidi değerlerini girin. 6. Güncelleme için Çıkış Portu seçeneğini belirleyin. 7. Kaydet butonuna tıklayın. 8. Ethernet Atama haricinde Ethernetlerin Web arayüz erişimlerin",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g29-fields",
+      "question": "Yönetim Paneli Ayarları ekranında hangi alanlar bulunur?",
+      "intent": "field_listing",
+      "expected_relative_path": "guides/antikor_v2/kullanici_yonetimi/yonetim-paneli-ayarlari.md",
+      "expected_section": "Alanlar",
+      "required_terms": [
+        "Web Arayüzü Erişim Protokolü",
+        "Servis Portu Numarası",
+        "Atanacak Ethernet"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Web Arayüzü Erişim Protokolü` (Servis Ayarları paneli): HTTPS veya HTTP protokolünü seçer. - `Servis Portu Numarası` (Servis Ayarları paneli): Web arayüzünün erişim portunu belirler. - `Atanacak Ethernet` (Servis Ayarları paneli): Ethernet atamasını seçer. - `IP Adresi` (Servis Ayarları paneli): IPv4 adresini belirler. - `Varsayılan Ağ Geçidi` (Servis Ayarları paneli): IPv4 ağ geçidini belirler. - `Güncelleme için",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g30-nav",
+      "question": "Yönetim Paneli Kullanıcıları için kaynakta verilen menü yolu nedir?",
+      "intent": "navigation",
+      "expected_relative_path": "guides/antikor_v2/kullanici_yonetimi/yonetim-paneli-kullanicilari.md",
+      "expected_section": "Menü yolu",
+      "required_terms": [
+        "Yönetim Paneli",
+        "Kullanıcı Yönetimi"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Antikor v2 NGFW yönetimi için yeni kullanıcılar tanımlama ve var olan kullanıcılar için kullanıcı rolleri ve yetkileri tanımlanabilmektedir.` - `/kullanici-yonetimi/yonetim-paneli-kullanicilari/` - `Yönetim Paneli Kullanıcıları` - `Yönetim Paneli > Kullanıcı Yönetimi` - `Yetkiler ve Roller > Kullanıcı rolleri arasından bir rol seçilerek düzenleme yapılabilir. Rol Düzenleme Kullanıcı Rolleri tanımlı olan rollerden ",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g30-procedure",
+      "question": "Yönetim Paneli Kullanıcıları nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/kullanici_yonetimi/yonetim-paneli-kullanicilari.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Parola Tekrar",
+        "İzinli IP Adresleri",
+        "Kullanıcı ve kimlik bilgilerini düzenleme için Düzenle"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Kullanıcı Parolasını Değiştir 2. Durum'u 'Pasif' olarak ayarlayın. 3. Kimlik Bilgileri seçeneğini kullanarak kullanıcı kimliğini belirleyin. 4. Kullanıcı Adı ve Parola alanlarını doldurun. 5. Parola Tekrar alanını doğru parolayla doldurun. 6. İzinli IP Adresleri alanını gerekli IP adreslerini girin. 7. Yetkili Olduğu İstemci Grupları seçeneğini kullanarak yetki verilen grupları belirleyin. 8. Filtreleme için Yetki",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g31-procedure",
+      "question": "Dinamik NAT nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/nat/dinamik-nat.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Durum seçimi yapın",
+        "Kaynak arayüzü belirleyin",
+        "Kaydet"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Durum seçimi yapın. 2. Kaynak arayüzü belirleyin. 3. Kaynak adresi girin. 4. Hedef adresi girin. 5. Servisleri belirleyin. 6. NAT arayüzü seçin. 7. Daima izinli olup olmadığını belirleyin. 8. Zaman dilimlerini girin. 9. Açıklamayı girin. 10. Kaydet",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g31-fields",
+      "question": "Dinamik NAT ekranında hangi alanlar bulunur?",
+      "intent": "field_listing",
+      "expected_relative_path": "guides/antikor_v2/nat/dinamik-nat.md",
+      "expected_section": "Alanlar",
+      "required_terms": [
+        "Durum",
+        "Kaynak Arayüzü",
+        "Kaynak Adres"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Durum` (Durum): NAT durumu seçimi. - `Kaynak Arayüzü` (Kaynak Arayüzü): Kaynak arayüzünü belirleme. - `Kaynak Adres` (Kaynak Adres): Kaynak adresini belirleme. - `Hedef Adres` (Hedef Adres): Hedef adresini belirleme. - `Servisler` (Servisler): Servisleri belirleme. - `NAT Arayüzü` (NAT Arayüzü): NAT arayüzünü belirleme. - `Daima İzinli` (Daima İzinli): Daima izinli olup olmadığını belirleme. - `Zaman Dilimleri` (Z",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g32-procedure",
+      "question": "Global NAT nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/nat/global-nat.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Aktif durumu seçin"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Aktif durumu seçin.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g32-fields",
+      "question": "Global NAT ekranında hangi alanlar bulunur?",
+      "intent": "field_listing",
+      "expected_relative_path": "guides/antikor_v2/nat/global-nat.md",
+      "expected_section": "Alanlar",
+      "required_terms": [
+        "LAN1 - igb1 (192.168.100.0/24)",
+        "LAN1.400 - igb1.400 (192.168.140.0/24)",
+        "LAN2 - igb2 (1.1.1.0/24)"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `LAN1 - igb1 (192.168.100.0/24)` (Yerel Ağ): LAN1 için NAT IP Adresi girilmesi gereken alan. - `LAN1.400 - igb1.400 (192.168.140.0/24)` (Yerel Ağ): LAN1.400 için NAT IP Adresi girilmesi gereken alan. - `LAN2 - igb2 (1.1.1.0/24)` (Yerel Ağ): LAN2 için NAT IP Adresi girilmesi gereken alan. - `LAN3 - igb3 (192.168.1.0/24)` (Yerel Ağ): LAN3 için NAT IP Adresi girilmesi gereken alan.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g33-nav",
+      "question": "NAT Havuzları için kaynakta verilen menü yolu nedir?",
+      "intent": "navigation",
+      "expected_relative_path": "guides/antikor_v2/nat/nat-havuzlari.md",
+      "expected_section": "Menü yolu",
+      "required_terms": [
+        "NAT Havuzları"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `NAT Havuzları`",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g33-procedure",
+      "question": "NAT Havuzları nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/nat/nat-havuzlari.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Adı",
+        "IP Adresleri",
+        "Kaydet"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Adı: LAN2 Çıkış 2. IP Adresleri: 192.168.168.68 3. Açıklama: LAN2 Çıkış 4. İşlemler: Düzenle, Sil 5. Adı alanına NAT havuzu adını girin. 6. IP Adresleri seçeneğini kullanarak IP adreslerini belirleyin. 7. Açıklama alanına NAT havuzu hakkında açıklama yapın. 8. Kaydet butonuna tıklayarak kaydınızı kaydedin.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g34-procedure",
+      "question": "NAT64 - IPv6/IPv4 NAT Yapılandırması nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/nat/nat64-ipv6-ipv4-nat-yapilandirmasi.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Gösterge Panelinden NAT64 Servisi",
+        "Kayıt Ekle",
+        "Ayarlar yapıldıktan sonra Gösterge"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Gösterge Panelinden NAT64 Servisi açılmalıdır. 2. Kayıt Ekle 3. Ayarlar yapıldıktan sonra Gösterge Panelinden NAT64 Servisi açılmalıdır.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g34-fields",
+      "question": "NAT64 - IPv6/IPv4 NAT Yapılandırması ekranında hangi alanlar bulunur?",
+      "intent": "field_listing",
+      "expected_relative_path": "guides/antikor_v2/nat/nat64-ipv6-ipv4-nat-yapilandirmasi.md",
+      "expected_section": "Alanlar",
+      "required_terms": [
+        "Sayfa Başı Kayıt Sayısı",
+        "Durum",
+        "Açıklama"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Sayfa Başı Kayıt Sayısı` (Sayfa Başı Kayıt Sayısı): Liste sayfasındaki kayıtların sayısı seçeneği. - `Durum` (Durum): Aktif - `Açıklama` (Açıklama): Açıklama - `Hedef IPv4 Adresi Temsil Eden IPv6 Alt Ağı` (Hedef IPv4 Adresi Temsil Eden IPv6 Alt Ağı): IPv6 64:ff9b::/96 - `Çıkış IPv4 Adresi Alt Ağı` (Çıkış IPv4 Adresi Alt Ağı): IPv4 - `NAT Kapsamına Girecek Kaynak IPv6 Ağı` (NAT Kapsamına Girecek Kaynak IPv6 Ağı): I",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g35-nav",
+      "question": "Port Yönlendirme için kaynakta verilen menü yolu nedir?",
+      "intent": "navigation",
+      "expected_relative_path": "guides/antikor_v2/nat/port-yonlendirme.md",
+      "expected_section": "Menü yolu",
+      "required_terms": [
+        "Port Yönlendirme"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Port Yönlendirme`",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g35-procedure",
+      "question": "Port Yönlendirme nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/nat/port-yonlendirme.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Aktif durumda olan port"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Aktif durumda olan port yönlendirmesini görüntüleyin.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g36-nav",
+      "question": "Statik NAT için kaynakta verilen menü yolu nedir?",
+      "intent": "navigation",
+      "expected_relative_path": "guides/antikor_v2/nat/statik-nat.md",
+      "expected_section": "Menü yolu",
+      "required_terms": [
+        "Erişimler",
+        "FTP Sunucu"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Statik NAT` - `Erişimler > FTP Sunucu` - `Erişimler > Ekle`",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g36-procedure",
+      "question": "Statik NAT nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/nat/statik-nat.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Durumu seçmek için '# Durum'",
+        "Adres Ailesi",
+        "Erişecek Ağ"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Durumu seçmek için '# Durum' seçeneğini kullanın. 2. Yerel IP arayüzünü girin. 3. Yerel IP adresini girin. 4. NAT arayüzünü girin. 5. NAT IP adresini girin. 6. Açıklamayı girin. 7. Alias IP atamasını girin. 8. Durum seçeneğini aktif hale getirin. 9. Adres Ailesi seçeneğini IPv4 olarak ayarlayın. 10. FTP sunucusunu düzenlemek için Ekle butonuna tıklanır. 11. Durum seçeneğini aktif hale getirin veya bırakın. 12. Ser",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g37-nav",
+      "question": "IPSec VPN Ayarları için kaynakta verilen menü yolu nedir?",
+      "intent": "navigation",
+      "expected_relative_path": "guides/antikor_v2/vpn/ipsec-vpn-ayarlari.md",
+      "expected_section": "Menü yolu",
+      "required_terms": [
+        "Erişim Listesi",
+        "Yeni Kayıt"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Erişim Listesi > Yeni Kayıt > Uç Bilgileri` - `Erişim Listesi > Yeni Kayıt > Uç Bilgileri > Noktadan Noktaya Yapılandırma` - `Uç Bilgileri > Noktadan Noktaya Yapılandırma > ID Yapılandırması`",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g37-procedure",
+      "question": "IPSec VPN Ayarları nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/vpn/ipsec-vpn-ayarlari.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Kaynak Adres ve Hedef",
+        "Bağlantı Adı: IPsec_VPN (Kaynak",
+        "Arayüz"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Kaynak Adres ve Hedef Adres alanlarını doldurun. 2. Bağlantı Adı: IPsec_VPN (Kaynak Adres: 192.168.33.1) 3. Durum: Aktif 4. Arayüz: -",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g38-nav",
+      "question": "IPSec VPN Profilleri için kaynakta verilen menü yolu nedir?",
+      "intent": "navigation",
+      "expected_relative_path": "guides/antikor_v2/vpn/ipsec-vpn-profilleri.md",
+      "expected_section": "Menü yolu",
+      "required_terms": [
+        "Yeni Kayıt Ekle",
+        "Faz 1"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Yeni Kayıt Ekle > Faz 1` - `Faz 2 > Ölü Bağlantı Saptama`",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g38-procedure",
+      "question": "IPSec VPN Profilleri nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/vpn/ipsec-vpn-profilleri.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Yeni bir IPSec VPN profilini eklemek için '+ Ekle'"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Yeni bir IPSec VPN profilini eklemek için '+ Ekle' butonuna tıklayın. 2. Profil adını girin. 3. Durumu seçin veya devre dışı bırakın. 4. IKE versiyonunu seçin. 5. Kriptolama algoritmasını seçin. 6. Pseudo random functionu seçin. 7. Kimlik doğrulama metodu seçin. 8. Ön paylaşım anahtarını girin veya belirleyin. 9. Anahtar yenileme süresini ayarlayın.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g39-nav",
+      "question": "İstemcisiz SSL Web VPN Ayarları için kaynakta verilen menü yolu nedir?",
+      "intent": "navigation",
+      "expected_relative_path": "guides/antikor_v2/vpn/istemcisiz-ssl-web-vpn-ayarlari.md",
+      "expected_section": "Menü yolu",
+      "required_terms": [
+        "İstemcisiz SSL Web VPN Ayarları",
+        "Profiller ve Kaynaklar"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `İstemcisiz SSL Web VPN Ayarları > Profiller ve Kaynaklar > Kullanıcı Profil Atama` - `Profiller ve Kaynaklar > Yeni Kayıt`",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g39-procedure",
+      "question": "İstemcisiz SSL Web VPN Ayarları nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/vpn/istemcisiz-ssl-web-vpn-ayarlari.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Default profili düzenleme için Düzenle",
+        "Default profili silmek için Sil",
+        "Ad"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Default profili düzenleme için Düzenle butonuna tıklayın. 2. Default profili silmek için Sil butonuna tıklayın. 3. Ad alanına yeni profil için ad girin. 4. Kaynaklar seçeneğinden profil oluşturmak istediğiniz kaynaktan birini seçin.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g40-procedure",
+      "question": "L2TP/PPTP VPN Ayarları nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/vpn/l2tp-pptp-vpn-ayarlari.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Çalışma"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Çalışma modunu seçin: PPTP ve L2TP, Sadece L2TP veya Sadece PPTP 2. IPsec şifreleme özelliğini etkinleştirin veya devre dışı bırakın. 3. Ön paylaşım anahtarını girin (isteğe bağlı). 4. Kişi başına oturum açma limitini belirleyin (isteğe bağlı). 5. Başlangıç IP adresini girin. 6. Bitiş IP adresini girin. 7. Sunucu IP adresini girin. 8. DNS sunucusu IP adresini girin.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g40-fields",
+      "question": "L2TP/PPTP VPN Ayarları ekranında hangi alanlar bulunur?",
+      "intent": "field_listing",
+      "expected_relative_path": "guides/antikor_v2/vpn/l2tp-pptp-vpn-ayarlari.md",
+      "expected_section": "Alanlar",
+      "required_terms": [
+        "Ön Paylaşım Anahtarı",
+        "Kişi Başı Oturum Açma Limiti",
+        "Başlangıç IP"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Ön Paylaşım Anahtarı` (Ön Paylaşım Anahtarı): Ön paylaşım anahtarının değeri. Eğer boş bırakılırsa varsayılan değer kullanılacaktır. - `Kişi Başı Oturum Açma Limiti` (Kişi Başı Oturum Açma Limiti): Kişi başına oturum açma limitini belirler. Eğer boş bırakılırsa varsayılan değer kullanılacaktır. - `Başlangıç IP` (Başlangıç IP): VPN bağlantısının başlangıç IP adresini belirler. Eğer boş bırakılırsa varsayılan değer ",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g41-procedure",
+      "question": "Site to Site VPN Ayarları nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/vpn/site-to-site-vpn-ayarlari.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Yeni kayıt eklemesi yapmak için “Ekle”"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Yeni kayıt eklemesi yapmak için “Ekle” butonuna basılır.",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g41-fields",
+      "question": "Site to Site VPN Ayarları ekranında hangi alanlar bulunur?",
+      "intent": "field_listing",
+      "expected_relative_path": "guides/antikor_v2/vpn/site-to-site-vpn-ayarlari.md",
+      "expected_section": "Alanlar",
+      "required_terms": [
+        "Durum",
+        "Protokol",
+        "Bağlantı Adı"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Durum` (Durum sütunu): Site-to-Site VPN ayarı durumu seçimi. - `Protokol` (Protokol sütunu): Site-to-Site VPN ayarı için kullanılan protokol seçimi. - `Bağlantı Adı` (Bağlantı Adı sütunu): Site-to-Site VPN bağlantısının adı. - `Kaynak IP adresi` (Kaynak IP adresi sütunu): Site-to-Site VPN bağlantısının kaynak IP adresi. - `Karşı IP adresi` (Karşı IP adresi sütunu): Site-to-Site VPN bağlantısının karşı IP adresi. -",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g42-nav",
+      "question": "SSL VPN Ayarları için kaynakta verilen menü yolu nedir?",
+      "intent": "navigation",
+      "expected_relative_path": "guides/antikor_v2/vpn/ssl-vpn-ayarlari.md",
+      "expected_section": "Menü yolu",
+      "required_terms": [
+        "Sertifika Yönetimi"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Sertifika Yönetimi > Kullanıcıların VPN kayıtlarının yapıldığı ve işletim sistemine uygun konfigurasyon dosyasının indirildiği sayfadır.`",
+      "case_kind": "generated"
+    },
+    {
+      "id": "g42-procedure",
+      "question": "SSL VPN Ayarları nasıl yapılandırılır?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/vpn/ssl-vpn-ayarlari.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Çalışma",
+        "Kişi başı oturum açma",
+        "Gösterim"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. WAN IP adresini girin 2. DNS ayarlarını girin 3. Alan adı sunucusunu girin 4. Kimlik doğrulamasını seçin (SHA1) 5. Kriptolama algoritmasını seçin (AES-256-CBC) 6. Protokolü seçin (UDP) 7. Port numarasını girin (1194) 8. Erişilecek ağıları girin 9. Çalışma modunu seçin (Sertifika Doğrulama) 10. Kişi başı oturum açma seçeneğini girin (Antikor, Generic OpenVPN) 11. Kimlik Bilgileri: 111********11 - Antikor Admin 12. ",
+      "case_kind": "generated"
+    },
+    {
+      "id": "c-hedef",
+      "question": "Yeni bir güvenlik kuralı oluştururken hedef IP adresini hangi alana girmeliyim?",
+      "intent": "field_listing",
+      "expected_relative_path": "guides/antikor_v2/guvenlik_kurallari/guvenlik-kurallari.md",
+      "expected_section": "Alanlar",
+      "required_terms": [
+        "Hedef Adres"
+      ],
+      "forbidden_terms": [
+        "Top 10 Hedef IP",
+        "SDWAN",
+        "VPN"
+      ],
+      "source_excerpt": "- `Sıra No` (Genel Kurallar): Sequence number of the rule. - `Durum` (Genel Kurallar): Status selection for the rule. - `İşlem` (Genel Kurallar): Action selection for the rule. - `Loglama` (Genel Kurallar): Logging status of the rule. - `Ağ Geçidi` (Genel Kurallar): Network interface selection for the rule. - `Açıklama` (Genel Kurallar): Description of the rule. - `İnceleme Yöntemi` (Genel Kurallar): Inspection metho",
+      "case_kind": "critical_regression"
+    },
+    {
+      "id": "c-dnat",
+      "question": "Dinamik NAT nasıl oluşturulur?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/nat/dinamik-nat.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "Durum",
+        "Kaynak Arayüz",
+        "Kaydet"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Durum seçimi yapın. 2. Kaynak arayüzü belirleyin. 3. Kaynak adresi girin. 4. Hedef adresi girin. 5. Servisleri belirleyin. 6. NAT arayüzü seçin. 7. Daima izinli olup olmadığını belirleyin. 8. Zaman dilimlerini girin. 9. Açıklamayı girin. 10. Kaydet",
+      "case_kind": "critical_regression"
+    },
+    {
+      "id": "c-gk-nav",
+      "question": "Güvenlik Kuralları ekranına nasıl giderim?",
+      "intent": "navigation",
+      "expected_relative_path": "guides/antikor_v2/guvenlik_kurallari/guvenlik-kurallari.md",
+      "expected_section": "Menü yolu",
+      "required_terms": [
+        "Güvenlik Kuralları"
+      ],
+      "forbidden_terms": [
+        "Sertifika Yönetimi",
+        "Top 10 Hedef IP"
+      ],
+      "source_excerpt": "- `Genel Kurallar` - `IP Kuralları > Ağ Tanımları` - `IP Kuralları > Kaynak Güvenlik Bölgesi` - `Hedef Adres > Servisler > IPv4` - `IPv4 - Kayıt Ekleme Formu`",
+      "case_kind": "critical_regression"
+    },
+    {
+      "id": "c-nat-first",
+      "question": "Yeni NAT kaydı oluştururken ilk hangi butona basmalıyım?",
+      "intent": "first_action",
+      "expected_relative_path": "guides/antikor_v2/nat/dinamik-nat.md",
+      "expected_section": "Görünür kontroller",
+      "required_terms": [
+        "+ Ekle"
+      ],
+      "forbidden_terms": [
+        "VPN",
+        "Sertifika"
+      ],
+      "source_excerpt": "- `Yenile`: Listeyi yeniden yükleme. - `+ Ekle`: Yeni bir NAT ayarları eklemek için. - `İptal`: İptal - `Kaydet`: Kaydet",
+      "case_kind": "critical_regression"
+    },
+    {
+      "id": "c-user",
+      "question": "Yönetim paneline yeni kullanıcı nasıl eklenir?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/kullanici_yonetimi/yonetim-paneli-kullanicilari.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "+ Ekle",
+        "Kullanıcı Adı",
+        "Kaydet"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Kullanıcı Parolasını Değiştir 2. Durum'u 'Pasif' olarak ayarlayın. 3. Kimlik Bilgileri seçeneğini kullanarak kullanıcı kimliğini belirleyin. 4. Kullanıcı Adı ve Parola alanlarını doldurun. 5. Parola Tekrar alanını doğru parolayla doldurun. 6. İzinli IP Adresleri alanını gerekli IP adreslerini girin. 7. Yetkili Olduğu İstemci Grupları seçeneğini kullanarak yetki verilen grupları belirleyin. 8. Filtreleme için Yetki",
+      "case_kind": "critical_regression"
+    },
+    {
+      "id": "c-ssl-nav",
+      "question": "SSL VPN ayarları hangi menü altında?",
+      "intent": "navigation",
+      "expected_relative_path": "guides/antikor_v2/vpn/ssl-vpn-ayarlari.md",
+      "expected_section": "Menü yolu",
+      "required_terms": [
+        "VPN Yönetimi",
+        "SSL VPN Ayarları"
+      ],
+      "forbidden_terms": [
+        "Sertifika Yönetimi",
+        "İstemcisiz SSL Web VPN"
+      ],
+      "source_excerpt": "- `Sertifika Yönetimi > Kullanıcıların VPN kayıtlarının yapıldığı ve işletim sistemine uygun konfigurasyon dosyasının indirildiği sayfadır.`",
+      "case_kind": "critical_regression"
+    },
+    {
+      "id": "c-gk-fields",
+      "question": "Güvenlik Kuralları ekranında hangi alanları doldurmam gerekiyor?",
+      "intent": "field_listing",
+      "expected_relative_path": "guides/antikor_v2/guvenlik_kurallari/guvenlik-kurallari.md",
+      "expected_section": "Alanlar",
+      "required_terms": [
+        "Durum",
+        "Hedef Adres"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "- `Sıra No` (Genel Kurallar): Sequence number of the rule. - `Durum` (Genel Kurallar): Status selection for the rule. - `İşlem` (Genel Kurallar): Action selection for the rule. - `Loglama` (Genel Kurallar): Logging status of the rule. - `Ağ Geçidi` (Genel Kurallar): Network interface selection for the rule. - `Açıklama` (Genel Kurallar): Description of the rule. - `İnceleme Yöntemi` (Genel Kurallar): Inspection metho",
+      "case_kind": "critical_regression"
+    },
+    {
+      "id": "c-ipsec",
+      "question": "IPSec VPN profili nasıl oluşturulur?",
+      "intent": "procedure",
+      "expected_relative_path": "guides/antikor_v2/vpn/ipsec-vpn-profilleri.md",
+      "expected_section": "Kullanım adımları",
+      "required_terms": [
+        "+ Ekle",
+        "Profil Adı"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "1. Yeni bir IPSec VPN profilini eklemek için '+ Ekle' butonuna tıklayın. 2. Profil adını girin. 3. Durumu seçin veya devre dışı bırakın. 4. IKE versiyonunu seçin. 5. Kriptolama algoritmasını seçin. 6. Pseudo random functionu seçin. 7. Kimlik doğrulama metodu seçin. 8. Ön paylaşım anahtarını girin veya belirleyin. 9. Anahtar yenileme süresini ayarlayın.",
+      "case_kind": "critical_regression"
+    },
+    {
+      "id": "c-compare",
+      "question": "IPSec VPN ile SSL VPN arasındaki fark nedir?",
+      "intent": "comparison",
+      "expected_relative_path": "guides/antikor_v2/vpn/ipsec-vpn-ayarlari.md",
+      "expected_section": "Kapsam",
+      "required_terms": [
+        "IPSec VPN",
+        "SSL VPN"
+      ],
+      "forbidden_terms": [],
+      "source_excerpt": "Bu sayfa, IPSec VPN bağlantısına dahil olan veya olacak erişimlerin eklendiği yerdir.",
+      "case_kind": "critical_regression"
+    }
+  ],
+  "source_incomplete_guides": [
+    "guides/antikor_v2/ag_yapilandirmasi/vlan-yapilandirmasi.md",
+    "guides/antikor_v2/ag_yapilandirmasi/wan-gruplari.md",
+    "guides/antikor_v2/guvenlik_ayarlari/uygulama-kategori-yonetimi.md"
+  ]
+}

@@ -6,6 +6,7 @@ from time import perf_counter
 from app.retrieval.models import RetrievalResult
 from app.retrieval.intent import IntentClassifier, QuestionIntent
 from app.retrieval.reranker import DocumentAwareReranker
+from app.retrieval.guide_catalog import GuideEntityCatalog
 from app.retrieval.retriever import Retriever
 from app.services.embedding_service import EmbeddingService
 from app.vectorstore.provider import VectorStoreProvider
@@ -36,6 +37,9 @@ class RetrievalService:
         self._context_max_chunks = context_max_chunks
         self._min_similarity = min_similarity
         self._reranker = DocumentAwareReranker()
+        self._guide_catalog = GuideEntityCatalog(
+            vector_store_provider.document_catalog()
+        )
 
     async def retrieve(self, question: str) -> RetrievalResult:
         """Retrieve relevant chunks and return a serializable result."""
@@ -57,10 +61,21 @@ class RetrievalService:
             ]
             intent = IntentClassifier.classify(question)
             ranked = self._reranker.rank(question, thresholded, intent)
-            dominant_path = self._reranker.dominant_path(ranked)
+            resolved_guides = self._guide_catalog.resolve(
+                question, 2 if intent == QuestionIntent.COMPARISON else 1
+            )
+            dominant_path = (
+                resolved_guides[0].relative_path
+                if resolved_guides else self._reranker.dominant_path(ranked)
+            )
             if intent == QuestionIntent.COMPARISON:
                 chunks = []
-                paths = self._reranker.top_document_paths(ranked, 2)
+                paths = [item.relative_path for item in resolved_guides]
+                for path in self._reranker.top_document_paths(ranked, 2):
+                    if path not in paths:
+                        paths.append(path)
+                    if len(paths) >= 2:
+                        break
                 for position, path in enumerate(paths):
                     document_candidates = [
                         item.chunk for item in ranked
