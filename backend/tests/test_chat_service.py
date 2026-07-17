@@ -23,8 +23,10 @@ class RecordingProvider(LLMProvider):
 
     def __init__(self) -> None:
         self.received_prompt: str | None = None
+        self.call_count = 0
 
     async def generate_response(self, prompt: str) -> str:
+        self.call_count += 1
         self.received_prompt = prompt
         return "Generated response"
 
@@ -162,6 +164,156 @@ class ChatServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(prompt_builder.received_message, "Explain classes.")
         self.assertEqual(prompt_builder.received_context, [chunk])
         self.assertEqual(provider.received_prompt, "Final RAG prompt")
+
+    async def test_field_listing_uses_evidence_fast_path(self) -> None:
+        provider = RecordingProvider()
+        chunk = create_retrieved_chunk(
+            document_name="web-sunucu-guvenligi.md",
+            relative_path=(
+                "guides/antikor_v2/guvenlik_ayarlari/"
+                "web-sunucu-guvenligi.md"
+            ),
+            section_title="Alanlar",
+            chunk_text=(
+                "## Alanlar\n"
+                "- `İstek Gövdesi Boyut Limiti`: Değer.\n"
+                "- `Ek Dosyasız İstek Gövdesi Limiti`: Değer.\n"
+                "- `Yanıt Gövdesi Boyut Limiti`: Değer."
+            ),
+        )
+        service = ChatService(
+            provider=provider,
+            prompt_builder=RecordingPromptBuilder(),  # type: ignore[arg-type]
+            retrieval_service=RetrievalServiceDouble(
+                result=create_retrieval_result([chunk])
+            ),
+        )
+
+        response = await service.generate_response(
+            "Web Sunucu Güvenliği ekranında hangi alanlar bulunur?"
+        )
+
+        self.assertEqual(provider.call_count, 0)
+        self.assertEqual(
+            service.last_diagnostics["answer_mode"],
+            "deterministic_fast_path",
+        )
+        self.assertFalse(service.last_diagnostics["ollama_called"])
+        for label in (
+            "İstek Gövdesi Boyut Limiti",
+            "Ek Dosyasız İstek Gövdesi Limiti",
+            "Yanıt Gövdesi Boyut Limiti",
+        ):
+            self.assertIn(label, response.response)
+        self.assertEqual(response.sources[0].relative_path, chunk.relative_path)
+        self.assertEqual(response.sources[0].section_title, "Alanlar")
+        self.assertEqual(set(response.model_dump()), {"response", "sources"})
+
+    async def test_navigation_uses_evidence_fast_path(self) -> None:
+        provider = RecordingProvider()
+        title_chunk = create_retrieved_chunk(
+            document_name="ssl-vpn-ayarlari.md",
+            relative_path="guides/antikor_v2/vpn/ssl-vpn-ayarlari.md",
+            section_title="SSL VPN Ayarları",
+            chunk_text="# SSL VPN Ayarları",
+        )
+        menu_chunk = create_retrieved_chunk(
+            similarity_score=0.89,
+            document_name="ssl-vpn-ayarlari.md",
+            relative_path="guides/antikor_v2/vpn/ssl-vpn-ayarlari.md",
+            section_title="Menü yolu",
+            chunk_index=1,
+            chunk_text="- `VPN Yönetimi > SSL VPN Ayarları`",
+        )
+        service = ChatService(
+            provider=provider,
+            prompt_builder=RecordingPromptBuilder(),  # type: ignore[arg-type]
+            retrieval_service=RetrievalServiceDouble(
+                result=create_retrieval_result([title_chunk, menu_chunk])
+            ),
+        )
+
+        response = await service.generate_response(
+            "SSL VPN ayarları hangi menü altında?"
+        )
+
+        self.assertEqual(response.response, "VPN Yönetimi > SSL VPN Ayarları")
+        self.assertEqual(provider.call_count, 0)
+        self.assertEqual(response.sources[0].section_title, "Menü yolu")
+
+    async def test_first_action_uses_evidence_fast_path(self) -> None:
+        provider = RecordingProvider()
+        chunk = create_retrieved_chunk(
+            document_name="dinamik-nat.md",
+            relative_path="guides/antikor_v2/nat/dinamik-nat.md",
+            section_title="Görünür kontroller",
+            chunk_text="- `+ Ekle`: Yeni kayıt oluşturur.",
+        )
+        service = ChatService(
+            provider=provider,
+            prompt_builder=RecordingPromptBuilder(),  # type: ignore[arg-type]
+            retrieval_service=RetrievalServiceDouble(
+                result=create_retrieval_result([chunk])
+            ),
+        )
+
+        response = await service.generate_response(
+            "Yeni NAT kaydı oluştururken ilk hangi butona basmalıyım?"
+        )
+
+        self.assertEqual(response.response, "+ Ekle")
+        self.assertEqual(provider.call_count, 0)
+        self.assertEqual(response.sources[0].section_title, "Görünür kontroller")
+
+    async def test_procedure_and_comparison_still_call_llm(self) -> None:
+        for question, section in (
+            ("Dinamik NAT nasıl oluşturulur?", "Kullanım adımları"),
+            ("IPSec VPN ile SSL VPN arasındaki fark nedir?", "Kapsam"),
+        ):
+            provider = RecordingProvider()
+            chunk = create_retrieved_chunk(
+                document_name="guide.md",
+                relative_path="guides/guide.md",
+                section_title=section,
+                chunk_text="Desteklenen kaynak bilgisi.",
+            )
+            service = ChatService(
+                provider=provider,
+                prompt_builder=RecordingPromptBuilder(),  # type: ignore[arg-type]
+                retrieval_service=RetrievalServiceDouble(
+                    result=create_retrieval_result([chunk])
+                ),
+            )
+            await service.generate_response(question)
+            self.assertEqual(provider.call_count, 1)
+            self.assertTrue(service.last_diagnostics["ollama_called"])
+
+    async def test_mixed_guide_structured_question_does_not_fast_path(self) -> None:
+        provider = RecordingProvider()
+        first = create_retrieved_chunk(
+            document_name="first.md", relative_path="guides/first.md",
+            section_title="Alanlar", chunk_text="- `Birinci Alan`: Değer.",
+        )
+        second = create_retrieved_chunk(
+            similarity_score=0.89, document_name="second.md",
+            relative_path="guides/second.md", section_title="Alanlar",
+            chunk_text="- `İkinci Alan`: Değer.",
+        )
+        service = ChatService(
+            provider=provider,
+            prompt_builder=RecordingPromptBuilder(),  # type: ignore[arg-type]
+            retrieval_service=RetrievalServiceDouble(
+                result=create_retrieval_result([first, second])
+            ),
+        )
+
+        await service.generate_response("Hangi alanlar bulunur?")
+
+        self.assertEqual(provider.call_count, 1)
+        self.assertNotEqual(
+            service.last_diagnostics["answer_mode"],
+            "deterministic_fast_path",
+        )
 
     async def test_returns_safe_answer_for_empty_retrieval(self) -> None:
         provider = RecordingProvider()

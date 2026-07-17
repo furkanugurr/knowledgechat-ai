@@ -28,7 +28,7 @@ class IntentClassifier:
             return QuestionIntent.FIRST_ACTION
         if cls._contains(
             phrase,
-            "hangi menu", "menu alt", "nasil git", "nasil gider", "nereden ulas", "nerede bul",
+            "hangi menu", "menu alt", "menu yolu", "nasil git", "nasil gider", "nereden ulas", "nerede bul",
         ):
             return QuestionIntent.NAVIGATION
         if cls._contains(
@@ -44,7 +44,9 @@ class IntentClassifier:
             return QuestionIntent.FIELD_PURPOSE
         if TurkishLexicalNormalizer.actions(question) & {
             "olustur", "ekle", "yapilandir", "tanimla",
-        } or cls._contains(phrase, "nasil yap"):
+        } and cls._contains(
+            phrase, "nasil", "olusturulur", "eklenir", "tanimlanir"
+        ) or cls._contains(phrase, "nasil yap"):
             return QuestionIntent.PROCEDURE
         return QuestionIntent.GENERAL_INFORMATION
 

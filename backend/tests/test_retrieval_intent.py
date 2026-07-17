@@ -9,6 +9,7 @@ class IntentClassifierTests(unittest.TestCase):
     CASES = (
         ("Güvenlik Kuralları ekranına nasıl giderim?", QuestionIntent.NAVIGATION),
         ("SSL VPN ayarları hangi menü altında?", QuestionIntent.NAVIGATION),
+        ("Kaynakta verilen ilk menü yolu nedir?", QuestionIntent.NAVIGATION),
         ("Dinamik NAT nasıl oluşturulur?", QuestionIntent.PROCEDURE),
         ("Yeni NAT kaydı oluştururken ilk hangi butona basmalıyım?", QuestionIntent.FIRST_ACTION),
         ("Hangi alanları doldurmalıyım?", QuestionIntent.FIELD_LISTING),

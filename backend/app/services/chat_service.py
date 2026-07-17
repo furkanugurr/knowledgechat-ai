@@ -9,6 +9,7 @@ from app.prompt.prompt_builder import PromptBuilder
 from app.providers.base import LLMProvider
 from app.retrieval.models import RetrievalResult, RetrievedChunk
 from app.retrieval.intent import IntentClassifier, QuestionIntent
+from app.retrieval.answer_grounding import GroundedAnswerGuard
 from app.retrieval.retriever import (
     EmptyCollectionError,
     RetrievalError,
@@ -59,11 +60,26 @@ class ChatService:
         self._prompt_builder = prompt_builder
         self._retrieval_service = retrieval_service
         self._retrieval_min_similarity = retrieval_min_similarity
+        self._answer_guard = GroundedAnswerGuard()
+        self._last_diagnostics: dict[str, object] = {}
+
+    @property
+    def last_diagnostics(self) -> dict[str, object]:
+        """Return internal diagnostics for tests and validation tooling."""
+        return dict(self._last_diagnostics)
 
     async def generate_response(self, user_message: str) -> ChatResponse:
         """Retrieve context, build a RAG prompt, and return the response."""
         provider_name = type(self._provider).__name__
         started_at = perf_counter()
+        self._last_diagnostics = {
+            "answer_mode": "llm",
+            "detected_intent": None,
+            "evidence_sufficient": False,
+            "selected_guide": None,
+            "selected_sections": [],
+            "ollama_called": False,
+        }
         logger.info("Starting RAG chat flow provider=%s", provider_name)
 
         if self._is_greeting(user_message):
@@ -103,6 +119,43 @@ class ChatService:
         if not relevant_chunks:
             return self._empty_context_response()
 
+        intent = IntentClassifier.classify(user_message)
+        navigation_hint = PromptBuilder._navigation_path_hint(relevant_chunks)
+        creation_hint = PromptBuilder._creation_control_hint(relevant_chunks)
+        guide_confident = self._guide_selection_is_confident(
+            user_message, retrieval_result.chunks, relevant_chunks
+        )
+        fast_path = (
+            self._answer_guard.structured_fast_path(
+                user_message,
+                intent,
+                relevant_chunks,
+                navigation_hint=navigation_hint,
+                creation_hint=creation_hint,
+            )
+            if guide_confident else None
+        )
+        self._last_diagnostics.update({
+            "detected_intent": intent.value,
+            "selected_guide": relevant_chunks[0].relative_path,
+            "selected_sections": [
+                item.section_title for item in relevant_chunks
+            ],
+            "evidence_sufficient": fast_path is not None,
+        })
+        if fast_path is not None:
+            answer, supporting_chunks = fast_path
+            self._last_diagnostics.update({
+                "answer_mode": "deterministic_fast_path",
+                "selected_sections": [
+                    item.section_title for item in supporting_chunks
+                ],
+            })
+            return ChatResponse(
+                response=answer,
+                sources=self._build_sources(supporting_chunks),
+            )
+
         try:
             prompt = self._prompt_builder.build(
                 user_message,
@@ -119,7 +172,20 @@ class ChatService:
 
         logger.info("RAG prompt built")
         try:
-            response = await self._provider.generate_response(prompt)
+            self._last_diagnostics["ollama_called"] = True
+            raw_response = await self._provider.generate_response(prompt)
+            response = self._answer_guard.ensure_grounded(
+                user_message,
+                intent,
+                relevant_chunks,
+                raw_response,
+                navigation_hint=navigation_hint,
+                creation_hint=creation_hint,
+            )
+            if response != raw_response:
+                self._last_diagnostics["answer_mode"] = (
+                    "deterministic_post_validation_fallback"
+                )
         except Exception:
             logger.error(
                 "LLM response failed provider=%s duration_seconds=%.3f",
@@ -165,6 +231,24 @@ class ChatService:
             for chunk in chunks
             if chunk.similarity_score >= self._retrieval_min_similarity
         ]
+
+    @classmethod
+    def _guide_selection_is_confident(
+        cls,
+        question: str,
+        original_chunks: list[RetrievedChunk],
+        selected_chunks: list[RetrievedChunk],
+    ) -> bool:
+        """Reject structured fast paths chosen from an ambiguous guide mix."""
+        selected_paths = {item.relative_path for item in selected_chunks}
+        if len(selected_paths) != 1:
+            return False
+        original_paths = {item.relative_path for item in original_chunks}
+        if len(original_paths) == 1:
+            return True
+        question_tokens = cls._focus_tokens(question)
+        document_tokens = cls._focus_tokens(selected_chunks[0].document_name)
+        return bool(question_tokens & document_tokens)
 
     @classmethod
     def _focus_context(

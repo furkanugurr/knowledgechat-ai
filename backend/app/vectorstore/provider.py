@@ -81,6 +81,10 @@ class VectorStoreProvider(ABC):
     ) -> list[VectorSearchRecord]:
         """Return similarity-ranked chunks from one source document."""
 
+    def document_catalog(self) -> list[dict[str, str]]:
+        """Return indexed document identities when the provider supports it."""
+        return []
+
     @abstractmethod
     def health_check(self) -> bool:
         """Return whether the vector store is available."""

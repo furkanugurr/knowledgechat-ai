@@ -222,6 +222,35 @@ class ChromaVectorStoreProvider(VectorStoreProvider):
                 f"Unable to search document in collection: {relative_path}"
             ) from exc
 
+    def document_catalog(self) -> list[dict[str, str]]:
+        """Build document identities from persisted chunk metadata."""
+        collection = self._require_collection()
+        try:
+            result = collection.get(include=["metadatas"])
+            catalog: dict[str, dict[str, str]] = {}
+            for metadata in result.get("metadatas") or []:
+                if not isinstance(metadata, dict):
+                    continue
+                path = str(metadata.get("relative_path", ""))
+                if not path or not path.startswith("guides/antikor_v2/"):
+                    continue
+                entry = catalog.setdefault(
+                    path,
+                    {
+                        "relative_path": path,
+                        "title": "",
+                        "category": path.split("/")[-2],
+                    },
+                )
+                if metadata.get("chunk_index") == 0:
+                    entry["title"] = str(metadata.get("section_title", ""))
+            for entry in catalog.values():
+                if not entry["title"]:
+                    entry["title"] = Path(entry["relative_path"]).stem
+            return sorted(catalog.values(), key=lambda item: item["relative_path"])
+        except Exception as exc:
+            raise VectorSearchError("Unable to build indexed document catalog.") from exc
+
     def health_check(self) -> bool:
         """Return whether the persistent Chroma client is operational."""
         try:

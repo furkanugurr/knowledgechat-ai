@@ -184,6 +184,18 @@ class DocumentAwareReranker:
         }
         chosen: list[RetrievedChunk] = []
         priorities = self.SECTION_PRIORITIES[intent]
+        if intent == QuestionIntent.NAVIGATION:
+            priorities = ("menu yol", "baslik")
+        elif intent == QuestionIntent.PROCEDURE:
+            priorities = ("kullanim adim", "gorunur kontrol", "alan")
+        elif intent == QuestionIntent.FIELD_LISTING:
+            priorities = ("alan",)
+        elif intent == QuestionIntent.FIELD_PURPOSE:
+            priorities = ("alan",)
+        elif intent == QuestionIntent.CONTROL_PURPOSE:
+            priorities = ("gorunur kontrol",)
+        # First take one chunk from each evidence type so a long procedure
+        # section cannot crowd controls and fields out of the final context.
         for preferred in priorities:
             matching = [
                 item
@@ -193,17 +205,49 @@ class DocumentAwareReranker:
                     and item.chunk_index == 0
                 ) or self._normalizer.phrase(item.section_title).startswith(preferred)
             ]
+            if matching:
+                best = max(
+                    matching,
+                    key=lambda item: (
+                        self._label_overlap(question, item.chunk_text),
+                        -item.chunk_index,
+                    ),
+                )
+                if best not in chosen:
+                    chosen.append(best)
+                if len(chosen) >= max_chunks:
+                    return sorted(chosen, key=lambda chunk: chunk.chunk_index)
+        # Then add remaining chunks in source order within priority sections.
+        for preferred in priorities:
+            matching = [
+                item for item in combined.values()
+                if (preferred == "baslik" and item.chunk_index == 0)
+                or self._normalizer.phrase(item.section_title).startswith(preferred)
+            ]
             for item in sorted(matching, key=lambda chunk: chunk.chunk_index):
                 if item not in chosen:
                     chosen.append(item)
                 if len(chosen) >= max_chunks:
                     return sorted(chosen, key=lambda chunk: chunk.chunk_index)
+        if intent in {
+            QuestionIntent.NAVIGATION,
+            QuestionIntent.FIELD_LISTING,
+            QuestionIntent.FIELD_PURPOSE,
+            QuestionIntent.CONTROL_PURPOSE,
+        }:
+            return sorted(chosen, key=lambda chunk: chunk.chunk_index)
         for item in dominant_candidates:
             if item not in chosen:
                 chosen.append(item)
             if len(chosen) >= max_chunks:
                 break
         return sorted(chosen, key=lambda chunk: chunk.chunk_index)
+
+    def _label_overlap(self, question: str, content: str) -> int:
+        """Score exact requested-label evidence inside one sibling chunk."""
+        question_tokens = set(self._normalizer.tokens(question))
+        content_tokens = set(self._normalizer.tokens(content))
+        return len(question_tokens & content_tokens)
 
     @staticmethod
     def strongest_direct_chunks(
