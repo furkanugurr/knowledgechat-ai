@@ -5,7 +5,7 @@ import re
 from app.retrieval.intent import QuestionIntent
 from app.retrieval.models import RetrievedChunk
 from app.retrieval.turkish_lexical import TurkishLexicalNormalizer
-from app.knowledge.evidence import has_usable_evidence
+from app.knowledge.evidence import has_usable_evidence, is_placeholder_line
 
 
 class GroundedAnswerGuard:
@@ -113,12 +113,12 @@ class GroundedAnswerGuard:
         """Require the minimum source facts for each structured answer shape."""
         normalized_answer = self._normalizer.phrase(answer)
         if intent == QuestionIntent.NAVIGATION:
-            bullets = self._BULLET.findall(evidence)
-            paths = [item for item in bullets if ">" in item]
-            marker = paths[0] if paths else (bullets[0] if bullets else "")
-            return bool(marker) and (
-                self._normalizer.phrase(marker) not in normalized_answer
-                or answer.count(">") > 1
+            candidates = self._navigation_candidates(evidence)
+            structured = [item for item in candidates if " > " in item]
+            required = structured or candidates
+            return bool(required) and not any(
+                self._normalizer.phrase(candidate) in normalized_answer
+                for candidate in required
             )
         if intent == QuestionIntent.FIELD_LISTING:
             labels = list(dict.fromkeys(self._LABEL.findall(evidence)))
@@ -154,31 +154,32 @@ class GroundedAnswerGuard:
         ]
         evidence = "\n".join(relevant)
         if intent == QuestionIntent.NAVIGATION:
-            bullets = self._BULLET.findall(evidence)
-            paths = [item for item in bullets if ">" in item]
-            normalized_question = self._normalizer.phrase(question)
-            matching = [
-                item for item in bullets
-                if any(
-                    self._normalizer.phrase(part) in normalized_question
-                    or (
-                        len(set(self._normalizer.tokens(part))) >= 2
-                        and len(
-                            set(self._normalizer.tokens(part))
-                            & set(self._normalizer.tokens(question))
-                        ) / len(set(self._normalizer.tokens(part))) >= 0.6
-                    )
-                    for part in item.strip(chr(96)).split(">")
-                    if self._normalizer.phrase(part)
-                )
+            candidates = self._navigation_candidates(evidence)
+            question_tokens = set(self._normalizer.tokens(question))
+            structured = [item for item in candidates if " > " in item]
+            related = [
+                item for item in structured
+                if question_tokens & set(self._normalizer.tokens(item))
             ]
-            if matching:
-                return min(matching, key=len).strip().strip(chr(96))
+            if related:
+                return max(
+                    related,
+                    key=lambda item: (
+                        len(question_tokens & set(self._normalizer.tokens(item))),
+                        item.count(" > "),
+                    ),
+                )
+            exact_screens = [
+                item for item in candidates if " > " not in item
+                and self._normalizer.phrase(item) in self._normalizer.phrase(question)
+            ]
+            if exact_screens:
+                return max(exact_screens, key=len)
+            if structured:
+                return structured[0]
             if navigation_hint and navigation_hint != "unavailable":
                 return navigation_hint
-            if paths:
-                return paths[0].strip().strip(chr(96))
-            return bullets[0].strip().strip(chr(96)) if bullets else None
+            return candidates[0] if candidates else None
         if intent in {QuestionIntent.PROCEDURE, QuestionIntent.FIRST_ACTION}:
             if (
                 intent == QuestionIntent.FIRST_ACTION
@@ -221,6 +222,24 @@ class GroundedAnswerGuard:
             key=lambda item: len(question_tokens & set(self._normalizer.tokens(item))),
         )
         return best.strip()
+
+    def _navigation_candidates(self, evidence: str) -> list[str]:
+        """Return exact source-supported breadcrumbs or short screen labels."""
+        labels = self._LABEL.findall(evidence)
+        bullets = self._BULLET.findall(evidence)
+        candidates: list[str] = []
+        for value in labels or bullets:
+            cleaned = value.strip().strip(chr(96))
+            if not cleaned or "->" in cleaned or is_placeholder_line(cleaned):
+                continue
+            if " > " in cleaned or (
+                len(cleaned) <= 100
+                and not cleaned.endswith(".")
+                and " tıkl" not in cleaned.casefold()
+            ):
+                if cleaned not in candidates:
+                    candidates.append(cleaned)
+        return candidates
 
     @staticmethod
     def _section_matches(intent: QuestionIntent, section: str) -> bool:

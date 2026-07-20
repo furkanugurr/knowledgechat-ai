@@ -125,13 +125,74 @@ def test_navigation_fallback_returns_supported_path() -> None:
     assert answer == "VPN Yönetimi > SSL VPN Ayarları"
 
 
-def test_navigation_fallback_prefers_identity_hint_for_live_question() -> None:
+def test_navigation_fallback_does_not_replace_source_with_identity_hint() -> None:
     answer = GroundedAnswerGuard().ensure_grounded(
         "SSL VPN ayarları hangi menü altında?", QuestionIntent.NAVIGATION,
         [chunk("Menü yolu", "- Sertifika Yönetimi > Kullanıcılar")],
         "Bilgi bulunamadı.", navigation_hint="VPN Yönetimi > SSL VPN Ayarları",
     )
-    assert answer == "VPN Yönetimi > SSL VPN Ayarları"
+    assert answer == "Sertifika Yönetimi > Kullanıcılar"
+
+
+def test_navigation_fallback_returns_complete_matching_breadcrumb() -> None:
+    answer = GroundedAnswerGuard().ensure_grounded(
+        "Anlık Log Monitörü için menü yolu nedir?", QuestionIntent.NAVIGATION,
+        [chunk(
+            "Menü yolu",
+            "- `Anlık Log Monitörü`\n"
+            "- `Sistem Ayarları > Log Ayarları > Anlık Log Monitörü`",
+        )],
+        "Anlık Log Monitörü",
+    )
+    assert answer == "Sistem Ayarları > Log Ayarları > Anlık Log Monitörü"
+
+
+def test_navigation_fallback_preserves_one_of_multiple_supported_paths() -> None:
+    answer = GroundedAnswerGuard().ensure_grounded(
+        "Bildirim Sağlayıcı Tanımları menü yolu nedir?",
+        QuestionIntent.NAVIGATION,
+        [chunk(
+            "Menü yolu",
+            "- `SMS Ayarları > SMS Sağlayıcıları`\n"
+            "- `SMS Ayarları > Bildirim Sağlayıcı Tanımları - Yeni Kayıt`",
+        )],
+        "Bildirim Sağlayıcı Tanımları",
+    )
+    assert answer == "SMS Ayarları > Bildirim Sağlayıcı Tanımları - Yeni Kayıt"
+
+
+def test_catalog_uses_path_slug_when_extracted_title_is_screen_specific() -> None:
+    catalog = GuideEntityCatalog([
+        {
+            "title": "Log Arşiv Yapılandırması",
+            "relative_path": "guides/antikor_v2/raporlar/rapor-ayarlari.md",
+            "category": "raporlar", "available_sections": "Alanlar|Menü yolu",
+            "source_url": "https://example.test/raporlar/rapor-ayarlari/",
+        },
+        {
+            "title": "Rapor Geçmişi",
+            "relative_path": "guides/antikor_v2/raporlar/rapor-gecmisi.md",
+            "category": "raporlar", "available_sections": "Alanlar|Menü yolu",
+            "source_url": "https://example.test/raporlar/rapor-gecmisi/",
+        },
+    ])
+    result = catalog.resolve(
+        "Rapor Ayarları ekranında hangi alanlar bulunur?",
+        intent=QuestionIntent.FIELD_LISTING,
+    )
+    assert [item.relative_path for item in result] == [
+        "guides/antikor_v2/raporlar/rapor-ayarlari.md"
+    ]
+
+
+def test_catalog_keeps_similar_report_titles_separate() -> None:
+    catalog = GuideEntityCatalog([
+        {"title": "Rapor Ayarları", "relative_path": "guides/raporlar/rapor-ayarlari.md", "category": "raporlar", "available_sections": "Alanlar"},
+        {"title": "Rapor Geçmişi", "relative_path": "guides/raporlar/rapor-gecmisi.md", "category": "raporlar", "available_sections": "Alanlar"},
+        {"title": "Rapor Şablonu Yönetimi", "relative_path": "guides/raporlar/rapor-sablonu-yonetimi.md", "category": "raporlar", "available_sections": "Alanlar"},
+    ])
+    assert catalog.resolve("Rapor Geçmişi ekranındaki alanlar", intent=QuestionIntent.FIELD_LISTING)[0].relative_path.endswith("rapor-gecmisi.md")
+    assert catalog.resolve("Rapor Şablonu Yönetimi ekranındaki alanlar", intent=QuestionIntent.FIELD_LISTING)[0].relative_path.endswith("rapor-sablonu-yonetimi.md")
 
 
 def test_navigation_fallback_keeps_supported_path_with_context_prefix() -> None:
