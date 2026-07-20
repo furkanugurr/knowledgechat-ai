@@ -8,7 +8,7 @@ from typing import Any
 
 import httpx
 
-ROOT=Path(__file__).resolve().parents[3]; sys.path.insert(0,str(ROOT/"backend"))
+ROOT=Path(os.environ["VALIDATION_REPOSITORY_ROOT"]) if "VALIDATION_REPOSITORY_ROOT" in os.environ else Path(__file__).resolve().parents[3]; sys.path.insert(0,str(ROOT/"backend"))
 from app.core.config import get_settings
 from app.embedding.ollama_embedding import OllamaEmbeddingProvider
 from app.prompt.prompt_builder import PromptBuilder
@@ -19,6 +19,7 @@ from app.services.chat_service import ChatService
 from app.services.embedding_service import EmbeddingService
 from app.services.retrieval_service import RetrievalService
 from app.vectorstore.chroma_provider import ChromaVectorStoreProvider
+from app.knowledge.evidence import has_usable_evidence
 
 GUIDES=ROOT/"knowledge_base/guides/antikor_v2"
 DATASET=Path(__file__).with_name("antikor_42_validation_dataset.json")
@@ -29,7 +30,7 @@ TITLE=re.compile(r"^#\s+(.+?)\s*$",re.M); HEADING=re.compile(r"^##\s+(.+?)\s*$",
 SOURCE=re.compile(r"^-\s+Sayfa:\s+(\S+)",re.M); LABEL=re.compile(chr(96)+"([^"+chr(96)+"]+)"+chr(96))
 LIST=re.compile(r"^(?:\d+\.|-)\s+(.+?)\s*$",re.M)
 ANSWER_LABEL=re.compile(chr(96)+"([^"+chr(96)+"]{2,80})"+chr(96)+r"\s+(?:buton|düğme|alan|menü)",re.I)
-LIMITS=("bilgi bulunamadı","açıkça yer almıyor","mevcut değil","yer almamaktadır","belirtilmemiş")
+LIMITS=("bilgi bulunamadı","açıkça yer almıyor","mevcut değil","yer almamaktadır")
 CRITICAL=(
 ("c-hedef","Yeni bir güvenlik kuralı oluştururken hedef IP adresini hangi alana girmeliyim?","field_listing","guides/antikor_v2/guvenlik_kurallari/guvenlik-kurallari.md","Alanlar",["Hedef Adres"],["Top 10 Hedef IP","SDWAN","VPN"]),
 ("c-dnat","Dinamik NAT nasıl oluşturulur?","procedure","guides/antikor_v2/nat/dinamik-nat.md","Kullanım adımları",["Durum","Kaynak Arayüz","Kaydet"],[]),
@@ -91,16 +92,16 @@ def build():
         text=path.read_text(encoding="utf-8"); tm=TITLE.search(text); sm=SOURCE.search(text); sec=sections(text)
         if not tm or not sm: raise RuntimeError("Missing title/source: "+str(path))
         name=tm.group(1).strip(); rel=path.relative_to(ROOT/"knowledge_base").as_posix()
-        usable=[s for s,v in sec.items() if s not in {"Kaynak bilgisi","Uyarılar"} and v]
+        usable=[s for s,v in sec.items() if s not in {"Kaynak bilgisi","Uyarılar"} and has_usable_evidence(v)]
         inventory.append({"title":name,"relative_path":rel,"category":path.relative_to(GUIDES).parts[0],
           "available_sections":list(sec),"source_url":sm.group(1),"usable_evidence_sections":usable})
         p=f"g{n:02d}"; own=[]
-        if "Menü yolu" in sec:
+        if "Menü yolu" in sec and has_usable_evidence(sec["Menü yolu"]):
             own.append(make(p+"-nav",name+" için kaynakta verilen menü yolu nedir?","navigation",rel,"Menü yolu",menu_terms(sec["Menü yolu"],name),[],sec["Menü yolu"]))
-        if "Kullanım adımları" in sec:
+        if "Kullanım adımları" in sec and has_usable_evidence(sec["Kullanım adımları"]):
             terms=procedure_labels(sec["Kullanım adımları"]); required=list(dict.fromkeys((terms[:2]+terms[-1:]) if terms else [name]))
             own.append(make(p+"-procedure",name+" nasıl yapılandırılır?","procedure",rel,"Kullanım adımları",required,[],sec["Kullanım adımları"]))
-        if "Alanlar" in sec: own.append(make(p+"-fields",name+" ekranında hangi alanlar bulunur?","field_listing",rel,"Alanlar",[x for x in labels(sec["Alanlar"]) if x!="#"][:3],[],sec["Alanlar"]))
+        if "Alanlar" in sec and has_usable_evidence(sec["Alanlar"]): own.append(make(p+"-fields",name+" ekranında hangi alanlar bulunur?","field_listing",rel,"Alanlar",[x for x in labels(sec["Alanlar"]) if x!="#"][:3],[],sec["Alanlar"]))
         aux="Görünür kontroller" if "Görünür kontroller" in sec else ("Alanlar" if "Alanlar" in sec else "Kapsam"); auxlabels=labels(sec.get(aux,""))
         while len(own)<2:
             if auxlabels:

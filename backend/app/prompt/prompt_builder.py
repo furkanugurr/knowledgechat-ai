@@ -186,10 +186,10 @@ class PromptBuilder:
             if "görünür kontroller" not in chunk.section_title.casefold():
                 continue
             for line in chunk.chunk_text.splitlines():
-                if "ekle" not in line.casefold() or "yeni" not in line.casefold():
+                if "ekle" not in line.casefold():
                     continue
                 match = re.search(r"`([^`]+)`", line)
-                if match:
+                if match and "ekle" in match.group(1).casefold():
                     labels.append(match.group(1).strip())
         if not labels:
             return "unavailable"

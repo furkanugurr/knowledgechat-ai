@@ -10,6 +10,7 @@ from app.retrieval.guide_catalog import GuideEntityCatalog
 from app.retrieval.retriever import Retriever
 from app.services.embedding_service import EmbeddingService
 from app.vectorstore.provider import VectorStoreProvider
+from app.knowledge.evidence import has_usable_evidence
 
 logger = logging.getLogger(__name__)
 
@@ -58,15 +59,18 @@ class RetrievalService:
             thresholded = [
                 chunk for chunk in candidates
                 if chunk.similarity_score >= self._min_similarity
+                and (chunk.chunk_index == 0 or has_usable_evidence(chunk.chunk_text))
             ]
             intent = IntentClassifier.classify(question)
             ranked = self._reranker.rank(question, thresholded, intent)
             resolved_guides = self._guide_catalog.resolve(
-                question, 2 if intent == QuestionIntent.COMPARISON else 1
+                question, 2 if intent == QuestionIntent.COMPARISON else 1,
+                intent,
             )
             dominant_path = (
                 resolved_guides[0].relative_path
-                if resolved_guides else self._reranker.dominant_path(ranked)
+                if resolved_guides else self._reranker.hinted_path(question)
+                or self._reranker.dominant_path(ranked)
             )
             if intent == QuestionIntent.COMPARISON:
                 chunks = []
@@ -84,6 +88,10 @@ class RetrievalService:
                     siblings = await self._retriever.retrieve_document(
                         embedding, path, max(self._candidate_k, 20)
                     )
+                    siblings = [
+                        item for item in siblings
+                        if item.chunk_index == 0 or has_usable_evidence(item.chunk_text)
+                    ]
                     per_document_limit = 3 if position == 0 else 2
                     chunks.extend(
                         self._reranker.select_siblings(
@@ -109,6 +117,10 @@ class RetrievalService:
                     dominant_path,
                     max(self._candidate_k, 20),
                 )
+                siblings = [
+                    item for item in siblings
+                    if item.chunk_index == 0 or has_usable_evidence(item.chunk_text)
+                ]
                 chunks = self._reranker.select_siblings(
                     question,
                     dominant_candidates,
