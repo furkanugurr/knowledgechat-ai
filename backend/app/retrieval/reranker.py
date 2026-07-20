@@ -140,6 +140,18 @@ class DocumentAwareReranker:
             key=lambda item: (-item.rerank_score, item.semantic_rank),
         )
 
+    def hinted_path(self, question: str) -> str | None:
+        """Resolve a bounded product workflow hint even outside semantic top-k."""
+        question_tokens = set(self._normalizer.tokens(question))
+        return next(
+            (
+                expected_path
+                for required_tokens, expected_path in self.GUIDE_HINTS
+                if set(required_tokens).issubset(question_tokens)
+            ),
+            None,
+        )
+
     @staticmethod
     def dominant_path(ranked: list[RankedChunk]) -> str | None:
         """Select a document only when deterministic support is meaningful."""

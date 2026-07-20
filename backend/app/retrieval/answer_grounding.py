@@ -5,6 +5,7 @@ import re
 from app.retrieval.intent import QuestionIntent
 from app.retrieval.models import RetrievedChunk
 from app.retrieval.turkish_lexical import TurkishLexicalNormalizer
+from app.knowledge.evidence import has_usable_evidence
 
 
 class GroundedAnswerGuard:
@@ -41,6 +42,7 @@ class GroundedAnswerGuard:
         supporting = [
             item for item in chunks
             if self._section_matches(intent, item.section_title)
+            and has_usable_evidence(item.chunk_text)
         ]
         if intent == QuestionIntent.FIRST_ACTION and creation_hint not in {
             None, "unavailable"
@@ -145,28 +147,36 @@ class GroundedAnswerGuard:
         creation_hint: str | None = None,
     ) -> str | None:
         ordered = sorted(chunks, key=lambda item: item.chunk_index)
+        ordered = [item for item in ordered if has_usable_evidence(item.chunk_text)]
         relevant = [
             item.chunk_text for item in ordered
             if self._section_matches(intent, item.section_title)
         ]
         evidence = "\n".join(relevant)
         if intent == QuestionIntent.NAVIGATION:
-            if (
-                navigation_hint and navigation_hint != "unavailable"
-                and "kaynakta verilen" not in question.casefold()
-            ):
-                return navigation_hint
             bullets = self._BULLET.findall(evidence)
             paths = [item for item in bullets if ">" in item]
+            normalized_question = self._normalizer.phrase(question)
+            matching = [
+                item for item in bullets
+                if any(
+                    self._normalizer.phrase(part) in normalized_question
+                    or (
+                        len(set(self._normalizer.tokens(part))) >= 2
+                        and len(
+                            set(self._normalizer.tokens(part))
+                            & set(self._normalizer.tokens(question))
+                        ) / len(set(self._normalizer.tokens(part))) >= 0.6
+                    )
+                    for part in item.strip(chr(96)).split(">")
+                    if self._normalizer.phrase(part)
+                )
+            ]
+            if matching:
+                return min(matching, key=len).strip().strip(chr(96))
+            if navigation_hint and navigation_hint != "unavailable":
+                return navigation_hint
             if paths:
-                normalized_question = self._normalizer.phrase(question)
-                title_paths = [
-                    item for item in paths
-                    if self._normalizer.phrase(item.split(">", 1)[0])
-                    in normalized_question
-                ]
-                if title_paths:
-                    return min(title_paths, key=len).strip().strip(chr(96))
                 return paths[0].strip().strip(chr(96))
             return bullets[0].strip().strip(chr(96)) if bullets else None
         if intent in {QuestionIntent.PROCEDURE, QuestionIntent.FIRST_ACTION}:

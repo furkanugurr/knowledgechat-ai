@@ -3,6 +3,7 @@
 import hashlib
 import logging
 import math
+import re
 from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
@@ -203,18 +204,38 @@ class ChromaVectorStoreProvider(VectorStoreProvider):
         try:
             matching = collection.get(
                 where={"relative_path": relative_path},
-                include=[],
+                include=["documents", "metadatas", "embeddings"],
             )
             count = len(matching.get("ids", []))
             if count == 0:
                 return []
-            result = collection.query(
-                query_embeddings=[query_embedding.values],
-                n_results=min(top_k, count),
-                where={"relative_path": relative_path},
-                include=["documents", "metadatas", "distances"],
-            )
-            return self._parse_search_result(result)
+            documents = matching.get("documents") or []
+            metadatas = matching.get("metadatas") or []
+            embeddings = matching.get("embeddings")
+            if embeddings is None or not (
+                len(documents) == len(metadatas) == len(embeddings)
+            ):
+                raise InvalidVectorSearchResultError
+            query = query_embedding.values
+            query_norm = math.sqrt(sum(value * value for value in query))
+            records: list[VectorSearchRecord] = []
+            for document, metadata, embedding in zip(
+                documents, metadatas, embeddings, strict=True
+            ):
+                values = [float(value) for value in embedding]
+                norm = math.sqrt(sum(value * value for value in values))
+                similarity = (
+                    sum(left * right for left, right in zip(query, values, strict=True))
+                    / (query_norm * norm)
+                    if query_norm and norm else 0.0
+                )
+                records.append(VectorSearchRecord(
+                    document=document, metadata=metadata,
+                    similarity_score=max(-1.0, min(1.0, similarity)),
+                ))
+            return sorted(
+                records, key=lambda item: item.similarity_score, reverse=True
+            )[:top_k]
         except InvalidVectorSearchResultError:
             raise
         except Exception as exc:
@@ -226,9 +247,10 @@ class ChromaVectorStoreProvider(VectorStoreProvider):
         """Build document identities from persisted chunk metadata."""
         collection = self._require_collection()
         try:
-            result = collection.get(include=["metadatas"])
+            result = collection.get(include=["metadatas", "documents"])
             catalog: dict[str, dict[str, str]] = {}
-            for metadata in result.get("metadatas") or []:
+            documents = result.get("documents") or []
+            for index, metadata in enumerate(result.get("metadatas") or []):
                 if not isinstance(metadata, dict):
                     continue
                 path = str(metadata.get("relative_path", ""))
@@ -240,10 +262,22 @@ class ChromaVectorStoreProvider(VectorStoreProvider):
                         "relative_path": path,
                         "title": "",
                         "category": path.split("/")[-2],
+                        "available_sections": "",
+                        "source_url": "",
                     },
                 )
                 if metadata.get("chunk_index") == 0:
                     entry["title"] = str(metadata.get("section_title", ""))
+                section = str(metadata.get("section_title", ""))
+                sections = set(filter(None, entry["available_sections"].split("|")))
+                sections.add(section)
+                entry["available_sections"] = "|".join(sorted(sections))
+                document = str(documents[index]) if index < len(documents) else ""
+                source_match = re.search(
+                    r"^-\s+Sayfa:\s+(\S+)", document, re.MULTILINE
+                )
+                if source_match:
+                    entry["source_url"] = source_match.group(1)
             for entry in catalog.values():
                 if not entry["title"]:
                     entry["title"] = Path(entry["relative_path"]).stem
