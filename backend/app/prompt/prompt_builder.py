@@ -153,28 +153,26 @@ class PromptBuilder:
     def _navigation_path_hint(
         retrieved_context: Sequence[RetrievedChunk],
     ) -> str:
-        """Derive a conservative path hint from the selected guide identity."""
+        """Derive a conservative path hint directly from menu evidence."""
         if not retrieved_context:
             return "unavailable"
-        first = retrieved_context[0]
-        path = first.relative_path.casefold()
-        title = next(
-            (
-                chunk.section_title
-                for chunk in retrieved_context
-                if chunk.chunk_index == 0
-            ),
-            Path(first.document_name).stem.replace("-", " ").title(),
-        )
-        if "/vpn/" in path:
-            return f"VPN Yönetimi > {title}"
-        if "/kullanici_yonetimi/" in path:
-            return f"Kullanıcı Yönetimi > {title}"
-        if "/guvenlik_kurallari/" in path:
-            return title
-        if "/nat/" in path:
-            return f"NAT Yapılandırması > {title}"
-        return title
+        for chunk in retrieved_context:
+            if "menü yolu" not in chunk.section_title.casefold():
+                continue
+            labels = re.findall(r"`([^`]+)`", chunk.chunk_text)
+            paths = [
+                label.strip() for label in labels
+                if " > " in label and "->" not in label
+            ]
+            if paths:
+                return paths[0]
+            screens = [
+                label.strip() for label in labels
+                if "->" not in label and len(label.strip()) <= 100
+            ]
+            if screens:
+                return screens[0]
+        return "unavailable"
 
     @staticmethod
     def _creation_control_hint(

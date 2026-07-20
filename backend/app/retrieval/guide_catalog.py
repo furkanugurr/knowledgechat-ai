@@ -16,6 +16,7 @@ class GuideEntity:
     category_tokens: frozenset[str]
     available_sections: frozenset[str]
     source_url: str
+    identity_aliases: frozenset[str]
 
 
 class GuideEntityCatalog:
@@ -42,10 +43,25 @@ class GuideEntityCatalog:
                     if section
                 ),
                 source_url=item.get("source_url", ""),
+                identity_aliases=self._identity_aliases(item, normalizer),
             )
             for item in records
             if item.get("title") and item.get("relative_path")
         ]
+
+    @staticmethod
+    def _identity_aliases(
+        item: dict[str, str], normalizer: TurkishLexicalNormalizer,
+    ) -> frozenset[str]:
+        """Derive stable aliases from indexed path and URL metadata."""
+        relative_stem = item.get("relative_path", "").rsplit("/", 1)[-1]
+        relative_stem = relative_stem.rsplit(".", 1)[0]
+        source_slug = item.get("source_url", "").rstrip("/").rsplit("/", 1)[-1]
+        return frozenset(
+            normalizer.phrase(value.replace("-", " "))
+            for value in (relative_stem, source_slug)
+            if value
+        )
 
     @staticmethod
     def _canonical_title(value: str) -> str:
@@ -60,7 +76,9 @@ class GuideEntityCatalog:
         question_tokens = set(self._normalizer.tokens(question))
         scored: list[tuple[float, GuideEntity]] = []
         for entity in self._entities:
-            exact = entity.normalized_title in normalized
+            exact_title = entity.normalized_title in normalized
+            exact_alias = any(alias in normalized for alias in entity.identity_aliases)
+            exact = exact_title or exact_alias
             overlap = len(question_tokens & entity.tokens) / max(len(entity.tokens), 1)
             if not exact and (len(entity.tokens) < 2 or overlap < 0.8):
                 continue
@@ -75,7 +93,8 @@ class GuideEntityCatalog:
             }.get(intent)
             section_support = 0.25 if expected_section in entity.available_sections else 0.0
             specificity = len(entity.tokens) / 100
-            scored.append(((10 if exact else 4) + overlap + specificity
+            scored.append(((10 if exact_title else 9.5 if exact_alias else 4)
+                           + overlap + specificity
                            + (2.0 * category_overlap) + section_support, entity))
         scored.sort(key=lambda item: (-item[0], -len(item[1].tokens), item[1].relative_path))
         if scored:
