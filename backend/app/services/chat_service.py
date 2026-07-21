@@ -10,6 +10,7 @@ from app.providers.base import LLMProvider
 from app.retrieval.models import RetrievalResult, RetrievedChunk
 from app.retrieval.intent import IntentClassifier, QuestionIntent
 from app.retrieval.answer_grounding import GroundedAnswerGuard
+from app.retrieval.domain_relevance import DomainRelevanceGate
 from app.retrieval.retriever import (
     EmptyCollectionError,
     RetrievalError,
@@ -19,7 +20,8 @@ from app.schemas.chat import ChatResponse, CitationSource
 logger = logging.getLogger(__name__)
 
 NO_RELEVANT_CONTEXT_RESPONSE = (
-    "Bu soruyla ilgili bilgi tabanında yeterince ilgili bilgi bulamadım."
+    "Bu soruyla ilgili bilgi mevcut bilgi tabanında bulunamadı. "
+    "Lütfen Antikor ürünleri, ayarları veya kılavuzlarıyla ilgili bir soru sorun."
 )
 GREETING_RESPONSE = (
     "Merhaba! Knowledge base içindeki belgeler hakkında soru sorabilirsin."
@@ -55,12 +57,22 @@ class ChatService:
         prompt_builder: PromptBuilder,
         retrieval_service: KnowledgeRetrievalService,
         retrieval_min_similarity: float = 0.65,
+        out_of_domain_min_similarity: float = 0.70,
+        out_of_domain_min_lexical_overlap: float = 0.12,
+        out_of_domain_min_guide_confidence: float = 0.50,
+        domain_gate_enabled: bool = False,
     ) -> None:
         self._provider = provider
         self._prompt_builder = prompt_builder
         self._retrieval_service = retrieval_service
         self._retrieval_min_similarity = retrieval_min_similarity
         self._answer_guard = GroundedAnswerGuard()
+        self._domain_gate = DomainRelevanceGate(
+            out_of_domain_min_similarity,
+            out_of_domain_min_lexical_overlap,
+            out_of_domain_min_guide_confidence,
+        )
+        self._domain_gate_enabled = domain_gate_enabled
         self._last_diagnostics: dict[str, object] = {}
 
     @property
@@ -79,6 +91,21 @@ class ChatService:
             "selected_guide": None,
             "selected_sections": [],
             "ollama_called": False,
+            "domain_relevant": None,
+            "no_answer_reason": None,
+            "top_similarity": 0.0,
+            "lexical_overlap": 0.0,
+            "guide_confidence": 0.0,
+            "confidence_tier": None,
+            "entity_signal": False,
+            "ui_label_signal": False,
+            "category_signal": False,
+            "lexical_signal": False,
+            "semantic_signal": False,
+            "guide_agreement_signal": False,
+            "final_decision_reason": None,
+            "resolved_guide": None,
+            "dominant_path": None,
         }
         logger.info("Starting RAG chat flow provider=%s", provider_name)
 
@@ -118,6 +145,42 @@ class ChatService:
 
         if not relevant_chunks:
             return self._empty_context_response()
+
+        retrieval_diagnostics = getattr(
+            self._retrieval_service, "last_diagnostics", {}
+        )
+        if callable(retrieval_diagnostics):
+            retrieval_diagnostics = retrieval_diagnostics()
+        if self._domain_gate_enabled:
+            decision = self._domain_gate.evaluate(
+                user_message,
+                relevant_chunks,
+                retrieval_diagnostics
+                if isinstance(retrieval_diagnostics, dict) else {},
+            )
+            self._last_diagnostics.update({
+                "domain_relevant": decision.domain_relevant,
+                "no_answer_reason": decision.reason,
+                "top_similarity": decision.top_similarity,
+                "lexical_overlap": decision.lexical_overlap,
+                "guide_confidence": decision.guide_confidence,
+                "confidence_tier": decision.confidence_tier,
+                "entity_signal": decision.entity_signal,
+                "ui_label_signal": decision.ui_label_signal,
+                "category_signal": decision.category_signal,
+                "lexical_signal": decision.lexical_signal,
+                "semantic_signal": decision.semantic_signal,
+                "guide_agreement_signal": decision.guide_agreement_signal,
+                "final_decision_reason": decision.final_decision_reason,
+                "resolved_guide": retrieval_diagnostics.get("resolved_guide"),
+                "dominant_path": retrieval_diagnostics.get("dominant_path"),
+            })
+            if not decision.domain_relevant:
+                self._last_diagnostics["answer_mode"] = "deterministic_no_answer"
+                logger.info(
+                    "Question rejected by domain gate reason=%s", decision.reason
+                )
+                return self._empty_context_response()
 
         intent = IntentClassifier.classify(user_message)
         navigation_hint = PromptBuilder._navigation_path_hint(relevant_chunks)
