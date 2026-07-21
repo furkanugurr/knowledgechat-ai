@@ -51,6 +51,24 @@ class Settings(BaseSettings):
         ge=0,
         le=1,
     )
+    out_of_domain_min_similarity: float = Field(
+        default=0.70,
+        validation_alias="OUT_OF_DOMAIN_MIN_SIMILARITY",
+        ge=0,
+        le=1,
+    )
+    out_of_domain_min_lexical_overlap: float = Field(
+        default=0.12,
+        validation_alias="OUT_OF_DOMAIN_MIN_LEXICAL_OVERLAP",
+        ge=0,
+        le=1,
+    )
+    out_of_domain_min_guide_confidence: float = Field(
+        default=0.50,
+        validation_alias="OUT_OF_DOMAIN_MIN_GUIDE_CONFIDENCE",
+        ge=0,
+        le=1,
+    )
     request_timeout: float = Field(
         validation_alias="REQUEST_TIMEOUT",
         gt=0,

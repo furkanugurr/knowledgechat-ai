@@ -41,10 +41,17 @@ class RetrievalService:
         self._guide_catalog = GuideEntityCatalog(
             vector_store_provider.document_catalog()
         )
+        self._last_diagnostics: dict[str, object] = {}
+
+    @property
+    def last_diagnostics(self) -> dict[str, object]:
+        """Return internal retrieval signals for gates and validation tools."""
+        return dict(self._last_diagnostics)
 
     async def retrieve(self, question: str) -> RetrievalResult:
         """Retrieve relevant chunks and return a serializable result."""
         started_at = perf_counter()
+        self._last_diagnostics = {}
         logger.info(
             "Retrieval started candidate_k=%d context_max_chunks=%d",
             self._candidate_k,
@@ -72,6 +79,22 @@ class RetrievalService:
                 if resolved_guides else self._reranker.hinted_path(question)
                 or self._reranker.dominant_path(ranked)
             )
+            top_lexical = max(
+                (item.lexical_support for item in ranked), default=0.0
+            )
+            self._last_diagnostics = {
+                "guide_entity_match": bool(resolved_guides),
+                "resolved_guide": (
+                    resolved_guides[0].relative_path if resolved_guides else None
+                ),
+                "guide_confidence": (
+                    1.0 if resolved_guides else min(max(top_lexical, 0.0), 1.0)
+                ),
+                "top_similarity": max(
+                    (item.similarity_score for item in thresholded), default=0.0
+                ),
+                "dominant_path": dominant_path,
+            }
             if intent == QuestionIntent.COMPARISON:
                 chunks = []
                 paths = [item.relative_path for item in resolved_guides]

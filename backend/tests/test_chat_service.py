@@ -61,10 +61,12 @@ class RetrievalServiceDouble:
         self,
         result: RetrievalResult | None = None,
         error: Exception | None = None,
+        diagnostics: dict[str, object] | None = None,
     ) -> None:
         self.result = result
         self.error = error
         self.received_question: str | None = None
+        self.last_diagnostics = diagnostics or {}
 
     async def retrieve(self, question: str) -> RetrievalResult:
         self.received_question = question
@@ -110,6 +112,81 @@ def create_retrieved_chunk(
 
 class ChatServiceTests(unittest.IsolatedAsyncioTestCase):
     """Verify RAG orchestration without external providers."""
+
+    async def test_out_of_domain_questions_return_no_answer_without_llm(self) -> None:
+        questions = (
+            "hamburger faydalı mı",
+            "yarın hava nasıl",
+            "matematik sınavına nasıl çalışılır",
+            "futbol maçı kaç kaç bitti",
+            "bana yemek tarifi ver",
+        )
+        for question in questions:
+            with self.subTest(question=question):
+                provider = RecordingProvider()
+                chunk = create_retrieved_chunk(
+                    similarity_score=0.82,
+                    document_name="ssl-vpn-ayarlari.md",
+                    relative_path="guides/antikor_v2/vpn/ssl-vpn-ayarlari.md",
+                    section_title="Menü yolu",
+                    chunk_text="- `VPN Yönetimi > SSL VPN Ayarları`",
+                )
+                service = ChatService(
+                    provider=provider,
+                    prompt_builder=RecordingPromptBuilder(),  # type: ignore[arg-type]
+                    retrieval_service=RetrievalServiceDouble(
+                        result=create_retrieval_result([chunk]),
+                        diagnostics={"guide_confidence": 0.4},
+                    ),
+                    domain_gate_enabled=True,
+                )
+
+                response = await service.generate_response(question)
+
+                self.assertEqual(response.response, NO_RELEVANT_CONTEXT_RESPONSE)
+                self.assertEqual(response.sources, [])
+                self.assertEqual(provider.call_count, 0)
+                self.assertFalse(service.last_diagnostics["domain_relevant"])
+                self.assertFalse(service.last_diagnostics["ollama_called"])
+
+    async def test_in_domain_and_borderline_questions_are_not_rejected(self) -> None:
+        cases = (
+            ("Dinamik NAT nasıl oluşturulur?", "dinamik-nat.md", "Kullanım adımları", "1. `+ Ekle` butonuna tıklayın."),
+            ("SSL VPN ayarları hangi menü altında?", "ssl-vpn-ayarlari.md", "Menü yolu", "- `VPN Yönetimi > SSL VPN Ayarları`"),
+            ("Yeni kullanıcı nasıl eklenir?", "yonetim-paneli-kullanicilari.md", "Kullanım adımları", "1. `+ Ekle` ile kullanıcı eklenir."),
+            ("Kaynak Adres ne işe yarar?", "guvenlik-kurallari.md", "Alanlar", "- `Kaynak Adres`: Trafik kaynağı."),
+            ("Rapor Ayarları ekranındaki alanlar", "rapor-ayarlari.md", "Alanlar", "- `Saklama Süresi`: Rapor ayarı."),
+            ("erişim ayarları", "erisim-oturum-ayarlari.md", "Kapsam", "Erişim ayarları açıklanır."),
+            ("bağlantıları nasıl izlerim", "baglanti-durumlari.md", "Kapsam", "Bağlantıları izlemek için kullanılır."),
+            ("güvenlik profili nasıl eklenir", "ips-profilleri.md", "Kullanım adımları", "1. `+ Ekle` ile güvenlik profili eklenir."),
+        )
+        for question, document, section, text in cases:
+            with self.subTest(question=question):
+                provider = RecordingProvider()
+                path = f"guides/antikor_v2/test/{document}"
+                chunk = create_retrieved_chunk(
+                    similarity_score=0.9, document_name=document,
+                    relative_path=path, section_title=section,
+                    chunk_text=text,
+                )
+                service = ChatService(
+                    provider=provider,
+                    prompt_builder=RecordingPromptBuilder(),  # type: ignore[arg-type]
+                    retrieval_service=RetrievalServiceDouble(
+                        result=create_retrieval_result([chunk]),
+                        diagnostics={
+                            "guide_entity_match": True,
+                            "guide_confidence": 1.0,
+                        },
+                    ),
+                    domain_gate_enabled=True,
+                )
+
+                response = await service.generate_response(question)
+
+                self.assertTrue(service.last_diagnostics["domain_relevant"])
+                self.assertNotEqual(response.response, NO_RELEVANT_CONTEXT_RESPONSE)
+                self.assertEqual(response.sources[0].relative_path, path)
 
     async def test_greeting_returns_friendly_response_without_retrieval(
         self,

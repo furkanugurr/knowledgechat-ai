@@ -46,4 +46,12 @@ def get_chat_service(
         prompt_builder=prompt_builder,
         retrieval_service=retrieval_service,
         retrieval_min_similarity=settings.retrieval_min_similarity,
+        out_of_domain_min_similarity=settings.out_of_domain_min_similarity,
+        out_of_domain_min_lexical_overlap=(
+            settings.out_of_domain_min_lexical_overlap
+        ),
+        out_of_domain_min_guide_confidence=(
+            settings.out_of_domain_min_guide_confidence
+        ),
+        domain_gate_enabled=True,
     )
