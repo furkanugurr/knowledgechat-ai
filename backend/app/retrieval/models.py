@@ -13,6 +13,9 @@ class RetrievedChunk(BaseModel):
     section_title: str = Field(min_length=1)
     chunk_index: int = Field(ge=0)
     language: str = Field(min_length=2)
+    source_type: str = Field(default="knowledge_document", min_length=1)
+    definition_evidence: bool = False
+    concept_evidence_level: str = "insufficient"
 
 
 class RetrievalResult(BaseModel):

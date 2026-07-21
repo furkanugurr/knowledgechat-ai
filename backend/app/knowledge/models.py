@@ -34,6 +34,7 @@ class KnowledgeMetadata(BaseModel):
     chunk_index: int = Field(ge=0)
     total_chunks: int = Field(ge=1)
     language: str = Field(min_length=2)
+    source_type: str = Field(default="knowledge_document", min_length=1)
     created_at: datetime
     updated_at: datetime
 

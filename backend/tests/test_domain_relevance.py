@@ -140,3 +140,24 @@ def test_two_guide_comparison_can_have_retrieval_agreement() -> None:
     )
     assert decision.domain_relevant
     assert decision.guide_agreement_signal
+
+
+def test_known_acronym_with_exact_corpus_evidence_is_high_confidence() -> None:
+    item = chunk("IPS, saldırı tespit ve önleme sistemidir.", 0.52)
+    decision = DomainRelevanceGate(0.70, 0.12, 0.50).evaluate(
+        "IPS nedir?", [item],
+        {"concept_match": True, "concept_term": "ips", "acronym_signal": True},
+    )
+    assert decision.domain_relevant
+    assert decision.concept_signal
+    assert decision.acronym_signal
+    assert decision.confidence_tier == "high_confidence_in_domain"
+
+
+def test_unknown_short_acronym_remains_out_of_domain() -> None:
+    decision = DomainRelevanceGate(0.70, 0.12, 0.50).evaluate(
+        "ABCXYZ nedir?", [chunk("IPS güvenlik profili.", 0.75)],
+        {"concept_match": False, "guide_confidence": 0.1},
+    )
+    assert not decision.domain_relevant
+    assert not decision.concept_signal

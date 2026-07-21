@@ -168,7 +168,9 @@ class PromptBuilderTests(unittest.TestCase):
         self.assertIn("QUESTION_INTENT: navigation", prompt)
         self.assertIn("EVIDENCE_AVAILABLE: true", prompt)
         self.assertIn("EXPECTED_EVIDENCE_SECTION: Menü yolu", prompt)
-        self.assertIn("Return one clear supported menu path", prompt)
+        self.assertIn("Give the exact supported menu path", prompt)
+        self.assertIn("add one brief explanatory sentence", prompt)
+        self.assertIn("Answer naturally, clearly", prompt)
         self.assertIn("NAVIGATION_PATH_HINT: VPN Yönetimi > SSL VPN Ayarları", prompt)
 
     def test_adds_explicit_creation_control_hint(self) -> None:

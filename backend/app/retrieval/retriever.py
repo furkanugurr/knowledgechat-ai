@@ -131,6 +131,27 @@ class Retriever:
         logger.info("Retrieved chunks count=%d", len(chunks))
         return chunks
 
+    async def retrieve_concept(
+        self, normalized_term: str, top_k: int,
+    ) -> list[RetrievedChunk]:
+        """Return exact corpus evidence for a known technical concept."""
+        try:
+            records = await asyncio.to_thread(
+                self._vector_store_provider.search_concept,
+                normalized_term,
+                top_k,
+            )
+        except VectorSearchError as exc:
+            raise RetrievalSearchError(
+                "Unable to search concept evidence."
+            ) from exc
+        try:
+            return [self._to_retrieved_chunk(record) for record in records]
+        except (KeyError, TypeError, ValidationError) as exc:
+            raise InvalidRetrievalResultError(
+                "The concept search returned invalid chunk metadata."
+            ) from exc
+
     async def retrieve_document(
         self,
         question_embedding: EmbeddingVector,
@@ -170,4 +191,13 @@ class Retriever:
             section_title=metadata["section_title"],
             chunk_index=metadata["chunk_index"],
             language=metadata["language"],
+            source_type=str(metadata.get(
+                "source_type",
+                "product_document"
+                if str(metadata["relative_path"]).casefold().endswith(".docx")
+                else "guide"
+                if str(metadata["relative_path"]).replace("\\", "/").startswith("guides/")
+                else "knowledge_document",
+            )),
+            definition_evidence=bool(metadata.get("definition_evidence", 0)),
         )

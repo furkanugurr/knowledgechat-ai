@@ -25,6 +25,7 @@ from app.vectorstore.provider import (
     VectorStoreUnavailableError,
     VectorUpsertError,
 )
+from app.retrieval.turkish_lexical import TurkishLexicalNormalizer
 
 logger = logging.getLogger(__name__)
 
@@ -285,6 +286,170 @@ class ChromaVectorStoreProvider(VectorStoreProvider):
         except Exception as exc:
             raise VectorSearchError("Unable to build indexed document catalog.") from exc
 
+    def concept_catalog(self) -> list[dict[str, str]]:
+        """Derive technical aliases from indexed metadata and content."""
+        collection = self._require_collection()
+        try:
+            result = collection.get(include=["metadatas", "documents"])
+            aliases: dict[str, dict[str, object]] = {}
+            documents = result.get("documents") or []
+            for index, metadata in enumerate(result.get("metadatas") or []):
+                if not isinstance(metadata, dict):
+                    continue
+                document = str(documents[index]) if index < len(documents) else ""
+                path = str(metadata.get("relative_path", ""))
+                section = str(metadata.get("section_title", ""))
+                document_name = str(metadata.get("document_name", ""))
+                values = [section, Path(document_name).stem]
+                normalized_path = path.replace("\\", "/")
+                if "/" in normalized_path:
+                    values.append(normalized_path.rsplit("/", 2)[-2].replace("-", " "))
+                values.extend(re.findall(r"`([^`]{2,80})`", document))
+                acronym_values = re.findall(
+                    r"(?<![A-Za-z0-9ÇĞİÖŞÜ])"
+                    r"[A-ZÇĞİÖŞÜ]{2,}(?:-[A-ZÇĞİÖŞÜ]{2,})*"
+                    r"(?![A-Za-z0-9ÇĞİÖŞÜ])",
+                    " ".join((section, document_name, document)),
+                )
+                for acronym in acronym_values:
+                    values.append(acronym)
+                    values.extend(part for part in acronym.split("-") if len(part) >= 3)
+                for value in values:
+                    self._add_concept_alias(aliases, value, path)
+                    tokens = TurkishLexicalNormalizer.tokens(value)
+                    if len(tokens) > 1:
+                        for token in tokens:
+                            if (
+                                len(token) >= 3
+                                and token not in self._CONCEPT_GENERIC_TOKENS
+                            ):
+                                self._add_concept_alias(aliases, token, path)
+            return [
+                {
+                    "alias": alias,
+                    "display_term": str(entry["display_term"]),
+                    "relative_paths": "|".join(sorted(entry["paths"])),
+                    "acronym": "true" if entry["acronym"] else "false",
+                }
+                for alias, entry in sorted(aliases.items())
+                if entry["paths"]
+            ]
+        except Exception as exc:
+            raise VectorSearchError("Unable to build indexed concept catalog.") from exc
+
+    def search_concept(
+        self, normalized_term: str, top_k: int,
+    ) -> list[VectorSearchRecord]:
+        """Return exact concept occurrences ranked for definition quality."""
+        if not normalized_term.strip() or top_k <= 0:
+            return []
+        collection = self._require_collection()
+        try:
+            result = collection.get(include=["metadatas", "documents"])
+            documents = result.get("documents") or []
+            term_tokens = set(TurkishLexicalNormalizer.tokens(normalized_term))
+            ranked: list[tuple[int, int, VectorSearchRecord]] = []
+            for index, metadata in enumerate(result.get("metadatas") or []):
+                if not isinstance(metadata, dict):
+                    continue
+                document = str(documents[index]) if index < len(documents) else ""
+                section = str(metadata.get("section_title", ""))
+                searchable_tokens = set(TurkishLexicalNormalizer.tokens(
+                    f"{section} {document}"
+                ))
+                if not term_tokens.issubset(searchable_tokens):
+                    continue
+                path = str(metadata.get("relative_path", ""))
+                source_type = str(metadata.get(
+                    "source_type",
+                    "product_document" if path.casefold().endswith(".docx") else "guide",
+                ))
+                definition = self._is_definition_evidence(
+                    normalized_term, section, document
+                )
+                section_normalized = TurkishLexicalNormalizer.phrase(section)
+                preferred_section = any(
+                    marker in section_normalized
+                    for marker in ("tanim", "aciklama", "genel bak", "giris", "kapsam")
+                )
+                score = (
+                    (100 if definition else 0)
+                    + (30 if definition and source_type == "product_document" else 0)
+                    + (15 if preferred_section else 0)
+                    + (5 if normalized_term in section_normalized else 0)
+                )
+                enriched = dict(metadata)
+                enriched["source_type"] = source_type
+                enriched["definition_evidence"] = 1 if definition else 0
+                record = VectorSearchRecord(
+                    document=document,
+                    similarity_score=0.99 if definition else 0.80,
+                    metadata=enriched,
+                )
+                ranked.append((score, -int(metadata.get("chunk_index", 0)), record))
+            ranked.sort(key=lambda item: (-item[0], item[1], str(item[2].metadata.get("relative_path", ""))))
+            return [item[2] for item in ranked[:top_k]]
+        except Exception as exc:
+            raise VectorSearchError("Unable to search indexed concept evidence.") from exc
+
+    _CONCEPT_GENERIC_TOKENS = frozenset({
+        "ayar", "ayarlari", "alan", "bilgi", "bolum", "durum", "ekran",
+        "genel", "giris", "gorunur", "islem", "kapsam", "kayit", "kontrol",
+        "kullanim", "menu", "profil", "tanim", "yonetim", "yeni",
+    })
+
+    @staticmethod
+    def _add_concept_alias(
+        aliases: dict[str, dict[str, object]], value: str, path: str,
+    ) -> None:
+        normalized = TurkishLexicalNormalizer.phrase(value)
+        if (
+            not normalized or not path or len(normalized.split()) > 4
+            or normalized in ChromaVectorStoreProvider._CONCEPT_GENERIC_TOKENS
+            or all(token.isdigit() for token in normalized.split())
+        ):
+            return
+        entry = aliases.setdefault(normalized, {
+            "display_term": value.strip(), "paths": set(),
+            "acronym": value.strip().isupper(),
+        })
+        paths = entry["paths"]
+        if isinstance(paths, set):
+            paths.add(path)
+        entry["acronym"] = bool(entry["acronym"] or value.strip().isupper())
+
+    @staticmethod
+    def _is_definition_evidence(term: str, section: str, document: str) -> bool:
+        normalized_term = TurkishLexicalNormalizer.phrase(term)
+        normalized_section = TurkishLexicalNormalizer.phrase(section)
+        body = re.sub(r"^#{1,6}\s+.*$", "", document, count=1, flags=re.MULTILINE).strip()
+        normalized_body = TurkishLexicalNormalizer.phrase(body)
+        first_sentence = re.split(r"(?<=[.!?])\s+", body, maxsplit=1)[0]
+        normalized_first_sentence = TurkishLexicalNormalizer.phrase(first_sentence)
+        starts_with_definition = (
+            bool(re.match(
+                rf"^\s*{re.escape(term)}\s*(?:,|\(|\bbir\b)",
+                first_sentence,
+                re.IGNORECASE,
+            ))
+            and "maktadir" not in normalized_first_sentence.split()[-1]
+            and "mektedir" not in normalized_first_sentence.split()[-1]
+            and bool(re.search(
+                r"(?:dır|dir|dur|dür|tır|tir|tur|tür)\.?$",
+                normalized_first_sentence,
+            ))
+        )
+        # Only a standalone parenthetical acronym is definition evidence.
+        # Lists such as ``(DMZ, WAN, LAN)`` merely mention the term.
+        parenthesized = any(
+            normalized_term in {
+                TurkishLexicalNormalizer.phrase(part)
+                for part in re.split(r"[/|-]", match.group(1))
+            }
+            for match in re.finditer(r"\(\s*([A-Za-z0-9/-]+)\s*\)", document)
+        )
+        return bool(starts_with_definition or parenthesized)
+
     def health_check(self) -> bool:
         """Return whether the persistent Chroma client is operational."""
         try:
@@ -425,4 +590,5 @@ class ChromaVectorStoreProvider(VectorStoreProvider):
             "section_title": metadata.section_title,
             "chunk_index": metadata.chunk_index,
             "language": metadata.language,
+            "source_type": metadata.source_type,
         }

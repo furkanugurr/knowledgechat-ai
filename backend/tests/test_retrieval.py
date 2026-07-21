@@ -12,6 +12,7 @@ from app.retrieval.retriever import (
     RetrievalSearchError,
     Retriever,
 )
+from app.retrieval.models import RetrievedChunk
 from app.services.retrieval_service import RetrievalService
 from app.vectorstore.models import (
     VectorCollectionInfo,
@@ -46,10 +47,14 @@ class SearchVectorStoreProvider(VectorStoreProvider):
         records: list[VectorSearchRecord] | None = None,
         document_records: dict[str, list[VectorSearchRecord]] | None = None,
         error: Exception | None = None,
+        concepts: list[dict[str, str]] | None = None,
+        concept_records: dict[str, list[VectorSearchRecord]] | None = None,
     ) -> None:
         self.records = records or []
         self.document_records = document_records or {}
         self.error = error
+        self.concepts = concepts or []
+        self.concept_records = concept_records or {}
         self.top_k: int | None = None
         self.document_top_k: int | None = None
 
@@ -92,6 +97,14 @@ class SearchVectorStoreProvider(VectorStoreProvider):
 
     def health_check(self) -> bool:
         return True
+
+    def concept_catalog(self) -> list[dict[str, str]]:
+        return self.concepts
+
+    def search_concept(
+        self, normalized_term: str, top_k: int,
+    ) -> list[VectorSearchRecord]:
+        return self.concept_records.get(normalized_term, [])[:top_k]
 
 
 def create_record(
@@ -158,6 +171,19 @@ class RetrieverTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(RetrievalEmbeddingError):
             await retriever.retrieve("Question", top_k=5)
 
+    async def test_retrieves_exact_concept_records(self) -> None:
+        record = create_record("Antikor.docx", 0.99, 3)
+        record.metadata["source_type"] = "product_document"
+        record.metadata["definition_evidence"] = 1
+        retriever = Retriever(
+            RecordingQuestionEmbeddingService(),
+            SearchVectorStoreProvider(concept_records={"ips": [record]}),
+        )
+        chunks = await retriever.retrieve_concept("ips", 5)
+        self.assertEqual(chunks[0].relative_path, "Antikor.docx")
+        self.assertTrue(chunks[0].definition_evidence)
+        self.assertEqual(chunks[0].source_type, "product_document")
+
     async def test_handles_vector_search_failure(self) -> None:
         retriever = Retriever(
             RecordingQuestionEmbeddingService(),
@@ -206,6 +232,58 @@ class RetrievalServiceTests(unittest.IsolatedAsyncioTestCase):
             "fastapi/routing.md",
         )
         self.assertIsInstance(result.model_dump_json(), str)
+
+    async def test_classifies_multi_section_concept_as_synthesis_sufficient(self) -> None:
+        path = "guides/antikor_v2/ag_yapilandirmasi/vlan-yapilandirmasi.md"
+        records = []
+        for index, (section, document) in enumerate((
+            ("Kapsam", "VLAN yapılandırması ağ bölümlerini yönetmek için kullanılır."),
+            ("Alanlar", "VLAN için Ad, Etiket ve Arayüz alanları yapılandırılır."),
+            ("Kullanım adımları", "VLAN kaydı Ekle kontrolüyle oluşturulur ve Kaydet ile tamamlanır."),
+        )):
+            record = create_record(path, 0.8, index)
+            record.document = document
+            record.metadata["section_title"] = section
+            records.append(record)
+        provider = SearchVectorStoreProvider(
+            concepts=[{
+                "alias": "vlan", "display_term": "VLAN",
+                "relative_paths": path, "acronym": "true",
+            }],
+            concept_records={"vlan": records},
+        )
+        service = RetrievalService(
+            RecordingQuestionEmbeddingService(), provider,
+            candidate_k=30, context_max_chunks=5,
+        )
+
+        result = await service.retrieve("VLAN nedir?")
+
+        self.assertEqual(
+            service.last_diagnostics["concept_evidence_level"],
+            "synthesis_sufficient",
+        )
+        self.assertEqual(
+            set(service.last_diagnostics["concept_evidence_types"]),
+            {"purpose_scope", "fields", "procedure"},
+        )
+        self.assertTrue(result.chunks)
+        self.assertTrue(all(item.relative_path == path for item in result.chunks))
+        self.assertTrue(all(
+            item.concept_evidence_level == "synthesis_sufficient"
+            for item in result.chunks
+        ))
+
+    def test_isolated_label_is_insufficient_concept_evidence(self) -> None:
+        level, types = RetrievalService._classify_concept_evidence([
+            RetrievedChunk(
+                chunk_text="# VLAN", similarity_score=0.8,
+                document_name="vlan.md", relative_path="guides/vlan.md",
+                section_title="VLAN", chunk_index=0, language="tr",
+            )
+        ])
+        self.assertEqual(level, "insufficient")
+        self.assertEqual(types, [])
 
     async def test_candidate_pool_is_larger_than_final_context(self) -> None:
         records = [create_record(f"guide/{index}.md", 0.9 - index / 100, index) for index in range(10)]

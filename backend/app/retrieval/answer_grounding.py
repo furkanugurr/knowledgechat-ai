@@ -2,7 +2,7 @@
 from __future__ import annotations
 import re
 
-from app.retrieval.intent import QuestionIntent
+from app.retrieval.intent import IntentClassifier, QuestionIntent
 from app.retrieval.models import RetrievedChunk
 from app.retrieval.turkish_lexical import TurkishLexicalNormalizer
 from app.knowledge.evidence import has_usable_evidence, is_placeholder_line
@@ -33,15 +33,28 @@ class GroundedAnswerGuard:
         """Build an evidence-only answer for safe, structured intents."""
         if intent not in {
             QuestionIntent.NAVIGATION,
+            QuestionIntent.PROCEDURE,
             QuestionIntent.FIRST_ACTION,
             QuestionIntent.FIELD_LISTING,
+            QuestionIntent.CONCEPT_DEFINITION,
+            QuestionIntent.PRODUCT_OVERVIEW,
         }:
             return None
-        if len({item.relative_path for item in chunks}) != 1:
+        if (
+            intent not in {
+                QuestionIntent.CONCEPT_DEFINITION,
+                QuestionIntent.PRODUCT_OVERVIEW,
+            }
+            and len({item.relative_path for item in chunks}) != 1
+        ):
             return None
         supporting = [
             item for item in chunks
-            if self._section_matches(intent, item.section_title)
+            if (
+                item.definition_evidence
+                if intent == QuestionIntent.CONCEPT_DEFINITION
+                else self._section_matches(intent, item.section_title)
+            )
             and has_usable_evidence(item.chunk_text)
         ]
         if intent == QuestionIntent.FIRST_ACTION and creation_hint not in {
@@ -88,15 +101,22 @@ class GroundedAnswerGuard:
         missing_shape_evidence = self._missing_shape_evidence(
             intent, evidence, answer
         )
+        concept_drift = False
+        if intent == QuestionIntent.CONCEPT_DEFINITION:
+            requested_term = IntentClassifier.definition_term(question)
+            concept_drift = bool(requested_term) and not self._normalizer.phrase(answer).startswith(
+                self._normalizer.phrase(requested_term)
+            )
         structured = intent in {
             QuestionIntent.NAVIGATION, QuestionIntent.PROCEDURE,
             QuestionIntent.FIRST_ACTION, QuestionIntent.FIELD_LISTING,
             QuestionIntent.FIELD_PURPOSE, QuestionIntent.CONTROL_PURPOSE,
+            QuestionIntent.CONCEPT_DEFINITION, QuestionIntent.PRODUCT_OVERVIEW,
             QuestionIntent.GENERAL_INFORMATION,
         }
         if not structured or not (
             unknown or false_limitation or missing_requested
-            or missing_shape_evidence
+            or missing_shape_evidence or concept_drift
         ):
             return answer
         fallback = self._fallback(
@@ -213,6 +233,24 @@ class GroundedAnswerGuard:
             )
             content = re.sub(r"^##\s+Kapsam\s*", "", content).strip()
             return content or None
+        if intent in {
+            QuestionIntent.CONCEPT_DEFINITION,
+            QuestionIntent.PRODUCT_OVERVIEW,
+        }:
+            definition_chunks = [
+                item for item in ordered if item.definition_evidence
+            ]
+            if not definition_chunks:
+                return None
+            content = definition_chunks[0].chunk_text.strip()
+            content = re.sub(r"^#{1,6}\s+.*?\n+", "", content).strip()
+            if intent == QuestionIntent.CONCEPT_DEFINITION:
+                term_tokens = self._normalizer.tokens(question)
+                term = term_tokens[0] if term_tokens else ""
+                expansion = self._parenthetical_expansion(content, term)
+                if expansion:
+                    return f"{term.upper()}, {expansion} anlamında kullanılır."
+            return content or None
         bullets = self._BULLET.findall(evidence)
         if not bullets:
             return None
@@ -222,6 +260,25 @@ class GroundedAnswerGuard:
             key=lambda item: len(question_tokens & set(self._normalizer.tokens(item))),
         )
         return best.strip()
+
+    @staticmethod
+    def _parenthetical_expansion(content: str, term: str) -> str | None:
+        """Extract a source-written phrase immediately before ``(ACRONYM)``."""
+        if not term:
+            return None
+        match = re.search(
+            rf"(?:^|[.,;:]\s+)([^.,;:()]{{2,80}}?)\s*\(\s*{re.escape(term)}\s*\)",
+            content,
+            re.IGNORECASE,
+        )
+        if not match:
+            return None
+        phrase = match.group(1).strip()
+        words = phrase.split()
+        # Acronym letters usually mirror the word count of its expansion.
+        # Keeping that nearest phrase avoids an unrelated sentence prefix.
+        word_count = max(1, len(re.sub(r"[^A-Za-z0-9]", "", term)))
+        return " ".join(words[-word_count:]) if words else None
 
     def _navigation_candidates(self, evidence: str) -> list[str]:
         """Return exact source-supported breadcrumbs or short screen labels."""

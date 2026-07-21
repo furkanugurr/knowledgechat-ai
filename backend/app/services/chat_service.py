@@ -23,6 +23,10 @@ NO_RELEVANT_CONTEXT_RESPONSE = (
     "Bu soruyla ilgili bilgi mevcut bilgi tabanında bulunamadı. "
     "Lütfen Antikor ürünleri, ayarları veya kılavuzlarıyla ilgili bir soru sorun."
 )
+INSUFFICIENT_CONCEPT_DEFINITION_RESPONSE = (
+    "Bu kavram Antikor kılavuzlarında geçiyor ancak mevcut kaynaklarda "
+    "açık bir tanımı bulunmuyor."
+)
 GREETING_RESPONSE = (
     "Merhaba! Knowledge base içindeki belgeler hakkında soru sorabilirsin."
 )
@@ -106,6 +110,12 @@ class ChatService:
             "final_decision_reason": None,
             "resolved_guide": None,
             "dominant_path": None,
+            "concept_signal": False,
+            "acronym_signal": False,
+            "concept_term": None,
+            "concept_definition_available": False,
+            "concept_evidence_level": "insufficient",
+            "concept_evidence_types": [],
         }
         logger.info("Starting RAG chat flow provider=%s", provider_name)
 
@@ -135,7 +145,11 @@ class ChatService:
         )
         relevant_chunks = (
             retrieval_result.chunks
-            if IntentClassifier.classify(user_message) == QuestionIntent.COMPARISON
+            if IntentClassifier.classify(user_message) in {
+                QuestionIntent.COMPARISON,
+                QuestionIntent.CONCEPT_DEFINITION,
+                QuestionIntent.PRODUCT_OVERVIEW,
+            }
             else self._focus_context(user_message, retrieval_result.chunks)
         )
         logger.info(
@@ -144,6 +158,11 @@ class ChatService:
         )
 
         if not relevant_chunks:
+            self._last_diagnostics.update({
+                "answer_mode": "no_answer",
+                "ollama_called": False,
+                "no_answer_reason": "empty_retrieval",
+            })
             return self._empty_context_response()
 
         retrieval_diagnostics = getattr(
@@ -174,21 +193,56 @@ class ChatService:
                 "final_decision_reason": decision.final_decision_reason,
                 "resolved_guide": retrieval_diagnostics.get("resolved_guide"),
                 "dominant_path": retrieval_diagnostics.get("dominant_path"),
+                "concept_signal": decision.concept_signal,
+                "acronym_signal": decision.acronym_signal,
+                "concept_term": retrieval_diagnostics.get("concept_term"),
+                "concept_definition_available": retrieval_diagnostics.get(
+                    "concept_definition_available", False
+                ),
+                "concept_evidence_level": retrieval_diagnostics.get(
+                    "concept_evidence_level", "insufficient"
+                ),
+                "concept_evidence_types": retrieval_diagnostics.get(
+                    "concept_evidence_types", []
+                ),
             })
             if not decision.domain_relevant:
-                self._last_diagnostics["answer_mode"] = "deterministic_no_answer"
+                self._last_diagnostics["answer_mode"] = "no_answer"
                 logger.info(
                     "Question rejected by domain gate reason=%s", decision.reason
                 )
                 return self._empty_context_response()
 
         intent = IntentClassifier.classify(user_message)
+        if (
+            intent == QuestionIntent.CONCEPT_DEFINITION
+            and retrieval_diagnostics.get("concept_match")
+            and retrieval_diagnostics.get(
+                "concept_evidence_level",
+                "explicit_definition"
+                if retrieval_diagnostics.get("concept_definition_available")
+                else "insufficient",
+            ) == "insufficient"
+        ):
+            self._last_diagnostics.update({
+                "answer_mode": "no_answer",
+                "detected_intent": intent.value,
+                "selected_guide": relevant_chunks[0].relative_path,
+                "selected_sections": [
+                    item.section_title for item in relevant_chunks
+                ],
+                "evidence_sufficient": False,
+            })
+            return ChatResponse(
+                response=INSUFFICIENT_CONCEPT_DEFINITION_RESPONSE,
+                sources=self._build_sources(relevant_chunks),
+            )
         navigation_hint = PromptBuilder._navigation_path_hint(relevant_chunks)
         creation_hint = PromptBuilder._creation_control_hint(relevant_chunks)
         guide_confident = self._guide_selection_is_confident(
             user_message, retrieval_result.chunks, relevant_chunks
         )
-        fast_path = (
+        deterministic_fallback = (
             self._answer_guard.structured_fast_path(
                 user_message,
                 intent,
@@ -196,7 +250,19 @@ class ChatService:
                 navigation_hint=navigation_hint,
                 creation_hint=creation_hint,
             )
-            if guide_confident else None
+            if (
+                guide_confident
+                or (
+                    intent == QuestionIntent.CONCEPT_DEFINITION
+                    and retrieval_diagnostics.get("concept_match")
+                    and retrieval_diagnostics.get(
+                        "concept_evidence_level",
+                        "explicit_definition"
+                        if retrieval_diagnostics.get("concept_definition_available")
+                        else "insufficient",
+                    ) == "explicit_definition"
+                )
+            ) else None
         )
         self._last_diagnostics.update({
             "detected_intent": intent.value,
@@ -204,20 +270,8 @@ class ChatService:
             "selected_sections": [
                 item.section_title for item in relevant_chunks
             ],
-            "evidence_sufficient": fast_path is not None,
+            "evidence_sufficient": deterministic_fallback is not None,
         })
-        if fast_path is not None:
-            answer, supporting_chunks = fast_path
-            self._last_diagnostics.update({
-                "answer_mode": "deterministic_fast_path",
-                "selected_sections": [
-                    item.section_title for item in supporting_chunks
-                ],
-            })
-            return ChatResponse(
-                response=answer,
-                sources=self._build_sources(supporting_chunks),
-            )
 
         try:
             prompt = self._prompt_builder.build(
@@ -234,6 +288,7 @@ class ChatService:
             ) from exc
 
         logger.info("RAG prompt built")
+        citation_chunks = relevant_chunks
         try:
             self._last_diagnostics["ollama_called"] = True
             raw_response = await self._provider.generate_response(prompt)
@@ -245,10 +300,22 @@ class ChatService:
                 navigation_hint=navigation_hint,
                 creation_hint=creation_hint,
             )
+            if (
+                response == raw_response
+                and deterministic_fallback is not None
+                and intent == QuestionIntent.FIRST_ACTION
+                and deterministic_fallback[0].casefold() not in response.casefold()
+            ):
+                response = deterministic_fallback[0]
             if response != raw_response:
                 self._last_diagnostics["answer_mode"] = (
                     "deterministic_post_validation_fallback"
                 )
+                if deterministic_fallback is not None:
+                    citation_chunks = deterministic_fallback[1]
+                    self._last_diagnostics["selected_sections"] = [
+                        item.section_title for item in citation_chunks
+                    ]
         except Exception:
             logger.error(
                 "LLM response failed provider=%s duration_seconds=%.3f",
@@ -256,10 +323,26 @@ class ChatService:
                 perf_counter() - started_at,
                 exc_info=True,
             )
-            raise
+            if deterministic_fallback is not None:
+                answer, supporting_chunks = deterministic_fallback
+                self._last_diagnostics.update({
+                    "answer_mode": "deterministic_post_validation_fallback",
+                    "selected_sections": [
+                        item.section_title for item in supporting_chunks
+                    ],
+                })
+                return ChatResponse(
+                    response=answer,
+                    sources=self._build_sources(supporting_chunks),
+                )
+            self._last_diagnostics.update({
+                "answer_mode": "no_answer",
+                "no_answer_reason": "llm_failure_without_safe_fallback",
+            })
+            return self._empty_context_response()
 
         logger.info("Building citations")
-        sources = self._build_sources(relevant_chunks)
+        sources = self._build_sources(citation_chunks)
         logger.info("Citations built citation_count=%d", len(sources))
         logger.info(
             "Chat response completed provider=%s duration_seconds=%.3f",

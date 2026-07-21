@@ -139,9 +139,56 @@ class ChromaVectorStoreTests(unittest.TestCase):
                 "section_title": "Test Section",
                 "chunk_index": 0,
                 "language": "en",
+                "source_type": "knowledge_document",
             },
         )
         self.assertEqual(len(stored["embeddings"][0]), 3)
+
+    def test_builds_and_searches_source_backed_concepts(self) -> None:
+        provider = self.create_provider()
+        timestamp = datetime(2026, 1, 1, tzinfo=UTC)
+        embedded = create_embedded_chunk(
+            "1. Antikor NGFW.docx",
+            "## IDS/IPS\n\nSaldırı Tespit ve Önleme Sistemi (IDS/IPS), "
+            "ağ trafiğindeki saldırıları tespit eder.",
+        )
+        embedded.chunk.metadata.section_title = "IDS/IPS: Tanım"
+        embedded.chunk.metadata.source_type = "product_document"
+        embedded.chunk.metadata.created_at = timestamp
+        embedded.chunk.metadata.updated_at = timestamp
+        provider.upsert_embeddings([embedded])
+
+        catalog = provider.concept_catalog()
+        aliases = {item["alias"] for item in catalog}
+        records = provider.search_concept("ips", 5)
+
+        self.assertIn("ips", aliases)
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0].metadata["source_type"], "product_document")
+        self.assertEqual(records[0].metadata["definition_evidence"], 1)
+
+    def test_acronym_list_is_not_definition_evidence(self) -> None:
+        self.assertFalse(
+            ChromaVectorStoreProvider._is_definition_evidence(
+                "WAN", "Kapsam",
+                "Arayüzler (DMZ, WAN, LAN ve VLAN) izlenebilir.",
+            )
+        )
+        self.assertTrue(
+            ChromaVectorStoreProvider._is_definition_evidence(
+                "WAN", "Kapsam", "Geniş alan ağları (WAN) kullanılır.",
+            )
+        )
+        self.assertFalse(
+            ChromaVectorStoreProvider._is_definition_evidence(
+                "NAT", "Kapsam", "NAT IP adresleri bu menüde tanımlanmaktadır.",
+            )
+        )
+        self.assertFalse(
+            ChromaVectorStoreProvider._is_definition_evidence(
+                "Antispam", "Antispam", "- `Antispam Kuralları - Yeni Kayıt`",
+            )
+        )
 
     def test_duplicate_upsert_updates_without_duplication(self) -> None:
         provider = self.create_provider()
