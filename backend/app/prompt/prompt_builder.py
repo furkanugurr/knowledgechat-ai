@@ -56,6 +56,12 @@ class PromptBuilder:
                 QuestionIntent.FIELD_PURPOSE: ("Alanlar",),
                 QuestionIntent.CONTROL_PURPOSE: ("Görünür kontroller",),
                 QuestionIntent.COMPARISON: ("Alanlar", "Kapsam"),
+                QuestionIntent.CONCEPT_DEFINITION: (
+                    "Tanım", "Açıklama", "Genel Bakış", "Giriş", "Kapsam",
+                ),
+                QuestionIntent.PRODUCT_OVERVIEW: (
+                    "Giriş", "Genel Bakış", "Tanım", "Açıklama", "Kapsam",
+                ),
                 QuestionIntent.GENERAL_INFORMATION: (),
             }[intent]
             evidence_available = any(
@@ -65,14 +71,25 @@ class PromptBuilder:
                 )
                 for chunk in retrieved_context
             ) if expected_sections else bool(retrieved_context)
+            if intent in {
+                QuestionIntent.CONCEPT_DEFINITION,
+                QuestionIntent.PRODUCT_OVERVIEW,
+            }:
+                evidence_available = any(
+                    chunk.definition_evidence
+                    or chunk.concept_evidence_level == "synthesis_sufficient"
+                    for chunk in retrieved_context
+                )
             answer_shapes = {
-                QuestionIntent.NAVIGATION: "Return one clear supported menu path. Do not combine unrelated headings or descriptive prose.",
-                QuestionIntent.PROCEDURE: "Return ordered supported steps in source order.",
-                QuestionIntent.FIRST_ACTION: "Answer the first supported button or action directly; add at most one short following step.",
-                QuestionIntent.FIELD_LISTING: "Return a clean list of supported fields without a limitation preface.",
-                QuestionIntent.FIELD_PURPOSE: "Explain only the requested field's supported purpose.",
-                QuestionIntent.CONTROL_PURPOSE: "Explain only the requested control's supported purpose.",
-                QuestionIntent.COMPARISON: "Explain both supported concepts separately, then state their difference.",
+                QuestionIntent.NAVIGATION: "Give the exact supported menu path, then add one brief explanatory sentence. Use 2-4 sentences total.",
+                QuestionIntent.PROCEDURE: "Return ordered supported steps in source order and briefly explain each supported step.",
+                QuestionIntent.FIRST_ACTION: "State the first supported button or action directly, then briefly explain what happens next. Use 2-4 sentences.",
+                QuestionIntent.FIELD_LISTING: "Return a clean list of supported fields and briefly explain important field purposes when the evidence supports them.",
+                QuestionIntent.FIELD_PURPOSE: "Explain only the requested field's supported purpose naturally in 1-3 paragraphs.",
+                QuestionIntent.CONTROL_PURPOSE: "Explain only the requested control's supported purpose naturally in 1-3 paragraphs.",
+                QuestionIntent.COMPARISON: "Explain both supported concepts separately, then state their difference clearly in a structured answer.",
+                QuestionIntent.CONCEPT_DEFINITION: "Explain the requested concept's definition, purpose, Antikor context, and practical use when explicitly supported. Use 2-4 concise paragraphs; do not add procedures or menu paths.",
+                QuestionIntent.PRODUCT_OVERVIEW: "Provide a 3-6 paragraph overview covering the supported definition, purpose, main capabilities, and typical use areas.",
                 QuestionIntent.GENERAL_INFORMATION: "Use the most directly relevant supported answer form.",
             }
             navigation_hint = (
@@ -94,11 +111,38 @@ class PromptBuilder:
                 f"NAVIGATION_PATH_HINT: {navigation_hint}\n"
                 f"CREATION_CONTROL_HINT: {creation_hint}\n"
                 "If EVIDENCE_AVAILABLE is true, never claim that the requested information is missing. "
-                "For navigation, when NAVIGATION_PATH_HINT is not unavailable, return that exact path and nothing else. "
+                "For navigation, when NAVIGATION_PATH_HINT is not unavailable, preserve that exact path and add only one brief supported explanation. "
                 "For procedure or first_action, when CREATION_CONTROL_HINT is not unavailable, begin with that exact control and continue only with supported steps. "
                 "For navigation, reject descriptive menu text that does not form a path for the exact guide entity; "
                 "the exact guide title and matching source URL path segments may be used as navigation evidence."
             )
+            if intent in {
+                QuestionIntent.CONCEPT_DEFINITION,
+                QuestionIntent.PRODUCT_OVERVIEW,
+            }:
+                requested_term = IntentClassifier.definition_term(user_message)
+                evidence_level = next(
+                    (
+                        chunk.concept_evidence_level
+                        for chunk in retrieved_context
+                        if chunk.concept_evidence_level != "insufficient"
+                    ),
+                    "insufficient",
+                )
+                sections.append(
+                    "DEFINITION EVIDENCE CONTRACT\n"
+                    f"REQUESTED_TERM: {requested_term or user_message}\n"
+                    f"CONCEPT_EVIDENCE_LEVEL: {evidence_level}\n"
+                    "The first sentence must begin with REQUESTED_TERM and directly define it. "
+                    "Do not primarily define another concept merely because it appears nearby. "
+                    "When CONCEPT_EVIDENCE_LEVEL is synthesis_sufficient, the sources may not contain a single dictionary-style definition. "
+                    "Infer a concise technical definition only from the supplied evidence by combining purpose, fields, controls, and procedure details. "
+                    "Explain what it is, what it does, why it is used, and how it appears in Antikor; add a brief practical example only when supported. "
+                    "Use only sources containing the exact requested term. "
+                    "Prefer product documents and explicit definition or introduction sections. "
+                    "Do not answer from menu paths, controls, fields, or procedures. "
+                    "Do not provide a generic definition from model knowledge."
+                )
             sections.append(
                 "KNOWLEDGE CONTEXT\n"
                 f"{self._format_context(retrieved_context)}"
@@ -124,7 +168,9 @@ class PromptBuilder:
         sections.append(
             "ANSWER FOCUS CONTRACT\n"
             "Treat the exact user question below as a strict boundary. "
+            "Answer naturally, clearly, and with useful completeness in Turkish. "
             "Use only context that directly answers its entity and action. "
+            "Preserve exact UI labels. Never mention retrieval, context, prompts, or internal mechanics. "
             "If the requested procedure or button behavior is not explicitly "
             "present, give one concise limitation in the same language as the "
             "question and stop. For a Turkish question, never switch to English. "
@@ -138,7 +184,7 @@ class PromptBuilder:
             )
             if intent == QuestionIntent.NAVIGATION and navigation_hint != "unavailable":
                 mandatory += (
-                    f" Output exactly this single path and nothing else: {navigation_hint}"
+                    f" Include this exact path: {navigation_hint}. Add one brief evidence-supported explanatory sentence."
                 )
             elif intent in (QuestionIntent.PROCEDURE, QuestionIntent.FIRST_ACTION) and creation_hint != "unavailable":
                 mandatory += f" Begin the answer with this control: {creation_hint}"

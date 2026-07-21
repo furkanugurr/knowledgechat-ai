@@ -27,6 +27,8 @@ class DomainRelevanceDecision:
     semantic_signal: bool
     guide_agreement_signal: bool
     final_decision_reason: str
+    concept_signal: bool
+    acronym_signal: bool
 
 
 class DomainRelevanceGate:
@@ -83,6 +85,16 @@ class DomainRelevanceGate:
             for item in chunks
         )
         evidence_tokens = set(self._normalizer.tokens(evidence))
+        concept_term = str(diagnostics.get("concept_term") or "")
+        concept_tokens = set(self._normalizer.tokens(concept_term))
+        concept_signal = bool(
+            diagnostics.get("concept_match")
+            and concept_tokens
+            and concept_tokens.issubset(evidence_tokens)
+        )
+        acronym_signal = bool(
+            concept_signal and diagnostics.get("acronym_signal")
+        )
         matched = {
             token for token in question_tokens
             if any(self._tokens_match(token, candidate) for candidate in evidence_tokens)
@@ -117,14 +129,25 @@ class DomainRelevanceGate:
             diagnostics.get("guide_entity_match")
             and (not resolved_path or resolved_path in selected_paths)
         )
+        guide_confidence = float(
+            diagnostics.get("guide_confidence", 0.0) or 0.0
+        )
         if entity_signal and selected_path and not (resolved_path or dominant_path):
             # Supports small test doubles and older internal callers that only
             # supplied the original entity flag. Production retrieval supplies
             # both paths and therefore still requires explicit agreement.
             guide_agreement_signal = True
+
+        if concept_signal:
+            return self._decision(
+                True, None, top_similarity, lexical_overlap,
+                max(guide_confidence, 1.0), "high_confidence_in_domain",
+                entity_signal, ui_label_signal, category_signal,
+                lexical_signal, semantic_signal, guide_agreement_signal,
+                concept_signal=True, acronym_signal=acronym_signal,
+            )
         document_tokens = set(self._normalizer.tokens(chunks[0].document_name))
         document_overlap = bool(question_tokens & document_tokens)
-        guide_confidence = float(diagnostics.get("guide_confidence", 0.0) or 0.0)
         if entity_signal:
             guide_confidence = max(guide_confidence, 1.0)
         elif guide_agreement_signal and document_overlap:
@@ -185,9 +208,12 @@ class DomainRelevanceGate:
         self, relevant: bool, reason: str | None, top_similarity: float,
         lexical_overlap: float, guide_confidence: float, tier: str,
         entity: bool, ui_label: bool, category: bool, lexical: bool,
-        semantic: bool, agreement: bool,
+        semantic: bool, agreement: bool, concept_signal: bool = False,
+        acronym_signal: bool = False,
     ) -> DomainRelevanceDecision:
         final_reason = (
+            "known_concept_with_exact_corpus_evidence"
+            if concept_signal else
             "strong_entity_or_ui_label_with_guide_agreement"
             if tier == "high_confidence_in_domain"
             else "combined_category_lexical_semantic_guide_evidence"
@@ -198,7 +224,7 @@ class DomainRelevanceGate:
             relevant, reason, round(top_similarity, 6),
             round(lexical_overlap, 6), round(guide_confidence, 6), tier,
             entity, ui_label, category, lexical, semantic, agreement,
-            final_reason,
+            final_reason, concept_signal, acronym_signal,
         )
 
     def _ui_labels(self, evidence: str) -> set[str]:

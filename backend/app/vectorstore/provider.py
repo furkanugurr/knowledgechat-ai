@@ -85,6 +85,16 @@ class VectorStoreProvider(ABC):
         """Return indexed document identities when the provider supports it."""
         return []
 
+    def concept_catalog(self) -> list[dict[str, str]]:
+        """Return concept aliases derived from indexed corpus evidence."""
+        return []
+
+    def search_concept(
+        self, normalized_term: str, top_k: int,
+    ) -> list[VectorSearchRecord]:
+        """Return exact concept-bearing records when supported."""
+        return []
+
     @abstractmethod
     def health_check(self) -> bool:
         """Return whether the vector store is available."""

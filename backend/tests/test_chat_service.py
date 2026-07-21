@@ -3,7 +3,7 @@
 import unittest
 from collections.abc import Sequence
 
-from app.providers.base import LLMProvider
+from app.providers.base import LLMProvider, LLMProviderTimeoutError
 from app.retrieval.models import RetrievalResult, RetrievedChunk
 from app.retrieval.retriever import (
     EmptyCollectionError,
@@ -11,6 +11,7 @@ from app.retrieval.retriever import (
 )
 from app.services.chat_service import (
     GREETING_RESPONSE,
+    INSUFFICIENT_CONCEPT_DEFINITION_RESPONSE,
     NO_RELEVANT_CONTEXT_RESPONSE,
     ChatPromptError,
     ChatRetrievalError,
@@ -21,17 +22,27 @@ from app.services.chat_service import (
 class RecordingProvider(LLMProvider):
     """LLM provider test double recording the final prompt."""
 
-    def __init__(self) -> None:
+    def __init__(self, response: str = "Generated response") -> None:
         self.received_prompt: str | None = None
         self.call_count = 0
+        self.response = response
 
     async def generate_response(self, prompt: str) -> str:
         self.call_count += 1
         self.received_prompt = prompt
-        return "Generated response"
+        return self.response
 
     async def health_check(self) -> bool:
         return True
+
+
+class TimeoutProvider(RecordingProvider):
+    """LLM provider test double simulating an Ollama timeout."""
+
+    async def generate_response(self, prompt: str) -> str:
+        self.call_count += 1
+        self.received_prompt = prompt
+        raise LLMProviderTimeoutError
 
 
 class RecordingPromptBuilder:
@@ -97,6 +108,9 @@ def create_retrieved_chunk(
     chunk_index: int = 0,
     language: str = "en",
     chunk_text: str = "Classes define object behavior.",
+    source_type: str = "knowledge_document",
+    definition_evidence: bool = False,
+    concept_evidence_level: str = "insufficient",
 ) -> RetrievedChunk:
     """Create one retrieved knowledge chunk."""
     return RetrievedChunk(
@@ -107,6 +121,9 @@ def create_retrieved_chunk(
         section_title=section_title,
         chunk_index=chunk_index,
         language=language,
+        source_type=source_type,
+        definition_evidence=definition_evidence,
+        concept_evidence_level=concept_evidence_level,
     )
 
 
@@ -148,6 +165,148 @@ class ChatServiceTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(provider.call_count, 0)
                 self.assertFalse(service.last_diagnostics["domain_relevant"])
                 self.assertFalse(service.last_diagnostics["ollama_called"])
+
+    async def test_known_concept_without_definition_returns_focused_limitation(self) -> None:
+        chunk = create_retrieved_chunk(
+            chunk_text="SD-WAN cihazları merkezi olarak yönetilir.",
+            document_name="sdwan.docx", relative_path="sdwan.docx",
+            section_title="Merkezi Yönetim", source_type="product_document",
+            definition_evidence=False,
+        )
+        retrieval = RetrievalServiceDouble(
+            create_retrieval_result([chunk]),
+            diagnostics={
+                "concept_match": True, "concept_term": "wan",
+                "acronym_signal": True, "concept_definition_available": False,
+            },
+        )
+        provider = RecordingProvider()
+        service = ChatService(
+            provider, RecordingPromptBuilder(), retrieval,
+            domain_gate_enabled=True,
+        )
+
+        response = await service.generate_response("WAN nedir?")
+
+        self.assertEqual(response.response, INSUFFICIENT_CONCEPT_DEFINITION_RESPONSE)
+        self.assertEqual(len(response.sources), 1)
+        self.assertEqual(provider.call_count, 0)
+        self.assertEqual(service.last_diagnostics["answer_mode"], "no_answer")
+        self.assertTrue(service.last_diagnostics["domain_relevant"])
+        self.assertEqual(
+            service.last_diagnostics["detected_intent"], "concept_definition"
+        )
+
+    async def test_known_concept_definition_uses_exact_definition_evidence(self) -> None:
+        chunk = create_retrieved_chunk(
+            chunk_text="IPS, saldırı tespit ve önleme sistemidir.",
+            document_name="antikor.docx", relative_path="antikor.docx",
+            section_title="IDS/IPS: Tanım", source_type="product_document",
+            definition_evidence=True,
+        )
+        retrieval = RetrievalServiceDouble(
+            create_retrieval_result([chunk]),
+            diagnostics={
+                "concept_match": True, "concept_term": "ips",
+                "acronym_signal": True, "concept_definition_available": True,
+            },
+        )
+        provider = RecordingProvider(
+            "IPS, saldırı tespit ve önleme sistemidir."
+        )
+        service = ChatService(
+            provider, RecordingPromptBuilder(), retrieval,
+            domain_gate_enabled=True,
+        )
+
+        response = await service.generate_response("IPS nedir?")
+
+        self.assertEqual(
+            response.response, "IPS, saldırı tespit ve önleme sistemidir."
+        )
+        self.assertEqual(response.sources[0].relative_path, "antikor.docx")
+        self.assertEqual(provider.call_count, 1)
+        self.assertEqual(service.last_diagnostics["answer_mode"], "llm")
+        self.assertTrue(service.last_diagnostics["concept_signal"])
+
+    async def test_synthesis_sufficient_concept_calls_llm(self) -> None:
+        path = "guides/antikor_v2/ag_yapilandirmasi/vlan-yapilandirmasi.md"
+        chunks = [
+            create_retrieved_chunk(
+                chunk_text="VLAN yapılandırması ağ bölümlerini yönetir.",
+                document_name="vlan-yapilandirmasi.md", relative_path=path,
+                section_title="Kapsam", concept_evidence_level="synthesis_sufficient",
+            ),
+            create_retrieved_chunk(
+                chunk_text="- `Etiket`: VLAN etiketi.\n- `Arayüz`: İlgili arayüz.",
+                document_name="vlan-yapilandirmasi.md", relative_path=path,
+                section_title="Alanlar", chunk_index=1,
+                concept_evidence_level="synthesis_sufficient",
+            ),
+        ]
+        retrieval = RetrievalServiceDouble(
+            create_retrieval_result(chunks),
+            diagnostics={
+                "concept_match": True, "concept_term": "vlan",
+                "acronym_signal": True,
+                "concept_definition_available": False,
+                "concept_evidence_level": "synthesis_sufficient",
+                "concept_evidence_types": ["purpose_scope", "fields"],
+            },
+        )
+        provider = RecordingProvider(
+            "VLAN, Antikor üzerinde ağ bölümlerini etiket ve arayüz alanlarıyla yönetmek için kullanılan bir yapılandırmadır."
+        )
+        service = ChatService(
+            provider, RecordingPromptBuilder(), retrieval,
+            domain_gate_enabled=True,
+        )
+
+        response = await service.generate_response("VLAN nedir?")
+
+        self.assertEqual(provider.call_count, 1)
+        self.assertEqual(service.last_diagnostics["answer_mode"], "llm")
+        self.assertEqual(
+            service.last_diagnostics["concept_evidence_level"],
+            "synthesis_sufficient",
+        )
+        self.assertNotEqual(
+            response.response, INSUFFICIENT_CONCEPT_DEFINITION_RESPONSE
+        )
+        self.assertTrue(all(source.relative_path == path for source in response.sources))
+
+    async def test_parenthetical_acronym_definition_is_focused(self) -> None:
+        chunk = create_retrieved_chunk(
+            chunk_text=(
+                "Site-to-Site VPN, farklı şubeleri geniş alan ağları (WAN) "
+                "üzerinden bağlamak için kullanılır."
+            ),
+            document_name="vpn.md", relative_path="vpn.md",
+            section_title="Kapsam", definition_evidence=True,
+        )
+        retrieval = RetrievalServiceDouble(
+            create_retrieval_result([chunk]),
+            diagnostics={
+                "concept_match": True, "concept_term": "wan",
+                "acronym_signal": True, "concept_definition_available": True,
+            },
+        )
+        provider = RecordingProvider(
+            "WAN, geniş alan ağları anlamında kullanılır."
+        )
+        service = ChatService(
+            provider, RecordingPromptBuilder(), retrieval,
+            domain_gate_enabled=True,
+        )
+
+        response = await service.generate_response("WAN nedir?")
+
+        self.assertEqual(
+            response.response, "WAN, geniş alan ağları anlamında kullanılır."
+        )
+        self.assertEqual(provider.call_count, 1)
+        self.assertEqual(service.last_diagnostics["answer_mode"], "llm")
+        self.assertEqual(response.sources[0].relative_path, "vpn.md")
 
     async def test_in_domain_and_borderline_questions_are_not_rejected(self) -> None:
         cases = (
@@ -270,12 +429,12 @@ class ChatServiceTests(unittest.IsolatedAsyncioTestCase):
             "Web Sunucu Güvenliği ekranında hangi alanlar bulunur?"
         )
 
-        self.assertEqual(provider.call_count, 0)
+        self.assertEqual(provider.call_count, 1)
         self.assertEqual(
             service.last_diagnostics["answer_mode"],
-            "deterministic_fast_path",
+            "deterministic_post_validation_fallback",
         )
-        self.assertFalse(service.last_diagnostics["ollama_called"])
+        self.assertTrue(service.last_diagnostics["ollama_called"])
         for label in (
             "İstek Gövdesi Boyut Limiti",
             "Ek Dosyasız İstek Gövdesi Limiti",
@@ -315,7 +474,11 @@ class ChatServiceTests(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertEqual(response.response, "VPN Yönetimi > SSL VPN Ayarları")
-        self.assertEqual(provider.call_count, 0)
+        self.assertEqual(provider.call_count, 1)
+        self.assertEqual(
+            service.last_diagnostics["answer_mode"],
+            "deterministic_post_validation_fallback",
+        )
         self.assertEqual(response.sources[0].section_title, "Menü yolu")
 
     async def test_first_action_uses_evidence_fast_path(self) -> None:
@@ -339,7 +502,11 @@ class ChatServiceTests(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertEqual(response.response, "+ Ekle")
-        self.assertEqual(provider.call_count, 0)
+        self.assertEqual(provider.call_count, 1)
+        self.assertEqual(
+            service.last_diagnostics["answer_mode"],
+            "deterministic_post_validation_fallback",
+        )
         self.assertEqual(response.sources[0].section_title, "Görünür kontroller")
 
     async def test_procedure_and_comparison_still_call_llm(self) -> None:
@@ -365,6 +532,35 @@ class ChatServiceTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(provider.call_count, 1)
             self.assertTrue(service.last_diagnostics["ollama_called"])
 
+    async def test_ollama_timeout_uses_post_validation_fallback(self) -> None:
+        provider = TimeoutProvider()
+        chunk = create_retrieved_chunk(
+            document_name="ssl-vpn-ayarlari.md",
+            relative_path="guides/antikor_v2/vpn/ssl-vpn-ayarlari.md",
+            section_title="Menü yolu",
+            chunk_text="- `VPN Yönetimi > SSL VPN Ayarları`",
+        )
+        service = ChatService(
+            provider=provider,
+            prompt_builder=RecordingPromptBuilder(),  # type: ignore[arg-type]
+            retrieval_service=RetrievalServiceDouble(
+                result=create_retrieval_result([chunk])
+            ),
+        )
+
+        response = await service.generate_response(
+            "SSL VPN ayarları hangi menü altında?"
+        )
+
+        self.assertEqual(provider.call_count, 1)
+        self.assertTrue(service.last_diagnostics["ollama_called"])
+        self.assertEqual(
+            service.last_diagnostics["answer_mode"],
+            "deterministic_post_validation_fallback",
+        )
+        self.assertEqual(response.response, "VPN Yönetimi > SSL VPN Ayarları")
+        self.assertEqual(response.sources[0].relative_path, chunk.relative_path)
+
     async def test_mixed_guide_structured_question_does_not_fast_path(self) -> None:
         provider = RecordingProvider()
         first = create_retrieved_chunk(
@@ -387,10 +583,7 @@ class ChatServiceTests(unittest.IsolatedAsyncioTestCase):
         await service.generate_response("Hangi alanlar bulunur?")
 
         self.assertEqual(provider.call_count, 1)
-        self.assertNotEqual(
-            service.last_diagnostics["answer_mode"],
-            "deterministic_fast_path",
-        )
+        self.assertNotEqual(service.last_diagnostics["answer_mode"], "no_answer")
 
     async def test_returns_safe_answer_for_empty_retrieval(self) -> None:
         provider = RecordingProvider()

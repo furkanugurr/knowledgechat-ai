@@ -30,6 +30,12 @@ class DocumentAwareReranker:
         QuestionIntent.FIELD_PURPOSE: ("alan", "kapsam"),
         QuestionIntent.CONTROL_PURPOSE: ("gorunur kontrol", "kullanim adim"),
         QuestionIntent.COMPARISON: ("alan", "kapsam", "kullanim adim"),
+        QuestionIntent.CONCEPT_DEFINITION: (
+            "tanim", "aciklama", "genel bak", "giris", "kapsam", "baslik",
+        ),
+        QuestionIntent.PRODUCT_OVERVIEW: (
+            "giris", "genel bak", "tanim", "aciklama", "kapsam", "baslik",
+        ),
         QuestionIntent.GENERAL_INFORMATION: ("kullanim adim", "alan", "menu yol", "gorunur kontrol", "kapsam"),
     }
     GUIDE_HINTS = (

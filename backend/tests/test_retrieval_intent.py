@@ -16,7 +16,16 @@ class IntentClassifierTests(unittest.TestCase):
         ("Hedef Adres ne işe yarar?", QuestionIntent.FIELD_PURPOSE),
         ("Kaydet butonu ne işe yarar?", QuestionIntent.CONTROL_PURPOSE),
         ("IPSec VPN ile SSL VPN arasındaki fark nedir?", QuestionIntent.COMPARISON),
-        ("Antikor nedir?", QuestionIntent.GENERAL_INFORMATION),
+        ("IPS nedir?", QuestionIntent.CONCEPT_DEFINITION),
+        ("WAN ne demek?", QuestionIntent.CONCEPT_DEFINITION),
+        ("NAT ne işe yarar?", QuestionIntent.CONCEPT_DEFINITION),
+        ("VPN açılımı nedir?", QuestionIntent.CONCEPT_DEFINITION),
+        ("Antispam nedir?", QuestionIntent.CONCEPT_DEFINITION),
+        ("VLAN nedir?", QuestionIntent.CONCEPT_DEFINITION),
+        ("DHCP nedir?", QuestionIntent.CONCEPT_DEFINITION),
+        ("OSPF nedir?", QuestionIntent.CONCEPT_DEFINITION),
+        ("Antikor nedir?", QuestionIntent.PRODUCT_OVERVIEW),
+        ("Antikor ne işe yarar?", QuestionIntent.PRODUCT_OVERVIEW),
     )
 
     def test_classifies_supported_intents(self) -> None:

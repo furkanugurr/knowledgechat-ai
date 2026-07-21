@@ -47,6 +47,19 @@ class MetadataExtractorTests(unittest.TestCase):
             self.assertEqual(metadata.created_at, created_at)
             self.assertEqual(metadata.updated_at, updated_at)
         self.assertEqual(chunks[1].metadata.section_title, "Path parameters")
+        self.assertEqual(chunks[1].metadata.source_type, "knowledge_document")
+
+    def test_marks_docx_sources_as_product_documents(self) -> None:
+        timestamp = datetime(2026, 1, 1, tzinfo=UTC)
+        document = KnowledgeDocument(
+            document_name="Antikor.docx", relative_path="Antikor.docx",
+            content="Antikor", sections=[], language="tr",
+            created_at=timestamp, updated_at=timestamp,
+        )
+        chunks = MetadataExtractor().create_chunks(
+            document, [ChunkDraft(content="Antikor", section_title="Giriş")]
+        )
+        self.assertEqual(chunks[0].metadata.source_type, "product_document")
 
 
 if __name__ == "__main__":
