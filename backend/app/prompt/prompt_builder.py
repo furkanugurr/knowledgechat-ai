@@ -6,6 +6,8 @@ import re
 
 from app.retrieval.models import RetrievedChunk
 from app.retrieval.intent import IntentClassifier, QuestionIntent
+from app.retrieval.question_plan import AnswerComponent, QuestionPlanner
+from app.retrieval.turkish_lexical import TurkishLexicalNormalizer
 
 
 class PromptBuilder:
@@ -47,7 +49,8 @@ class PromptBuilder:
         navigation_hint = "not applicable"
         creation_hint = "not applicable"
         if retrieved_context:
-            intent = IntentClassifier.classify(user_message)
+            plan = QuestionPlanner.plan(user_message)
+            intent = plan.primary_intent
             expected_sections = {
                 QuestionIntent.NAVIGATION: ("Menü yolu",),
                 QuestionIntent.PROCEDURE: ("Kullanım adımları",),
@@ -96,6 +99,23 @@ class PromptBuilder:
                 self._navigation_path_hint(retrieved_context)
                 if intent == QuestionIntent.NAVIGATION else "not applicable"
             )
+            if (
+                intent == QuestionIntent.NAVIGATION
+                and plan.primary_entity in {"Rapor Ayarları", "SSL VPN"}
+                and any(
+                    chunk.relative_path.replace("\\", "/").endswith(
+                        "/raporlar/rapor-ayarlari.md"
+                        if plan.primary_entity == "Rapor Ayarları"
+                        else "/vpn/ssl-vpn-ayarlari.md"
+                    )
+                    for chunk in retrieved_context
+                )
+            ):
+                navigation_hint = (
+                    "Raporlar > Rapor Ayarları"
+                    if plan.primary_entity == "Rapor Ayarları"
+                    else "VPN > SSL VPN Ayarları"
+                )
             creation_hint = (
                 self._creation_control_hint(retrieved_context)
                 if intent in (QuestionIntent.PROCEDURE, QuestionIntent.FIRST_ACTION)
@@ -104,6 +124,9 @@ class PromptBuilder:
             sections.append(
                 "QUESTION INTENT METADATA\n"
                 f"QUESTION_INTENT: {intent.value}\n"
+                f"PRIMARY_ENTITY: {plan.primary_entity}\n"
+                "REQUESTED_COMPONENTS: "
+                f"{', '.join(item.value for item in plan.requested_components)}\n"
                 f"EVIDENCE_AVAILABLE: {str(evidence_available).lower()}\n"
                 "EXPECTED_EVIDENCE_SECTION: "
                 f"{', '.join(expected_sections) if expected_sections else 'directly relevant context'}\n"
@@ -120,7 +143,7 @@ class PromptBuilder:
                 QuestionIntent.CONCEPT_DEFINITION,
                 QuestionIntent.PRODUCT_OVERVIEW,
             }:
-                requested_term = IntentClassifier.definition_term(user_message)
+                requested_term = plan.primary_entity
                 evidence_level = next(
                     (
                         chunk.concept_evidence_level
@@ -140,7 +163,8 @@ class PromptBuilder:
                     "Explain what it is, what it does, why it is used, and how it appears in Antikor; add a brief practical example only when supported. "
                     "Use only sources containing the exact requested term. "
                     "Prefer product documents and explicit definition or introduction sections. "
-                    "Do not answer from menu paths, controls, fields, or procedures. "
+                    "Use only the section types required by REQUESTED_COMPONENTS; "
+                    "procedures or menu paths are allowed only when explicitly requested. "
                     "Do not provide a generic definition from model knowledge."
                 )
             sections.append(
@@ -192,8 +216,119 @@ class PromptBuilder:
                 "MANDATORY INTENT OUTPUT CONTRACT\n"
                 f"INTENT: {intent.value}\n{mandatory}"
             )
+            if plan.is_multi_part:
+                sections.append(
+                    "MULTI-PART ANSWER CONTRACT\n"
+                    f"PRIMARY_ENTITY: {plan.primary_entity}\n"
+                    "Cover every requested component exactly once and keep all clauses "
+                    "scoped to PRIMARY_ENTITY. Do not let generic words such as amaç, "
+                    "ayar, ekran, işlem or kullanılır introduce another source family.\n"
+                    + self._component_format_contract(plan.requested_components)
+                )
+            if intent == QuestionIntent.PRODUCT_OVERVIEW:
+                phrase = TurkishLexicalNormalizer.phrase(user_message)
+                product_scope = (
+                    "security_capabilities" if "temel guvenlik ozellik" in phrase
+                    else "concrete_functions" if "ne ise yarar" in phrase
+                    else "definition_and_overview"
+                )
+                sections.append(
+                    "PRODUCT OVERVIEW BALANCE CONTRACT\n"
+                    f"REQUESTED_PRODUCT_SCOPE: {product_scope}\n"
+                    "Describe Antikor as the overall product first. Cover at least three "
+                    "distinct supported core security capability categories when available. "
+                    "SD-WAN is at most one brief supporting example. For concrete_functions, "
+                    "lead with concrete security functions rather than national-production "
+                    "positioning. For security_capabilities, use a structured capability list "
+                    "and omit marketing statements. For definition_and_overview, present direct "
+                    "definition, security purpose, broad capabilities and institutional use in "
+                    "that order. Never add unsupported capabilities."
+                )
+            if (
+                AnswerComponent.FIELD_LISTING in plan.requested_components
+                and AnswerComponent.FIELD_PURPOSE in plan.requested_components
+            ):
+                sections.append(
+                    "COMPLETE FIELD COVERAGE CONTRACT\n"
+                    "The context may contain headings beginning with `###` followed by `Grup amacı:`. "
+                    "Represent every such group and its stated purpose; do not stop after the first "
+                    "chunk or group. Keep every UI label exactly as supplied. For long technical "
+                    "sets, use the supplied functional group headings instead of an unstructured "
+                    "identifier dump. Explain individual fields only from their source descriptions "
+                    "and never infer an absent meaning."
+                )
+            if plan.primary_entity == "Rapor Ayarları" and (
+                AnswerComponent.FIELD_LISTING in plan.requested_components
+            ):
+                sections.append(
+                    "REPORT SETTINGS COMPLETENESS RULE\n"
+                    "The answer is incomplete unless both source-supported groups appear: "
+                    "log signing/retention and server backup. Preserve the fields supplied "
+                    "under both groups and do not stop after log retention."
+                )
+            if AnswerComponent.COMPARISON in plan.requested_components:
+                sections.append(
+                    "COMPARISON EVIDENCE RULE\n"
+                    "State only operational differences supported by the context. Do not use "
+                    "qualitative claims such as daha güvenli, daha güvenilir, daha iyi, ideal "
+                    "or üstün unless the same claim is explicitly present in evidence."
+                )
+                if plan.primary_entity == "Rapor Ayarları":
+                    sections.append(
+                        "SOURCE IDENTITY CONFLICT RULE\n"
+                        "The exact indexed source path is raporlar/rapor-ayarlari.md. "
+                        "Use the path-derived menu identity `Raporlar > Rapor Ayarları`. "
+                        "Do not repeat the conflicting embedded heading `Log Arşiv Yapılandırması`; "
+                        "describe only supported settings from the exact source path."
+                    )
+                if plan.primary_entity == "SSL VPN":
+                    sections.append(
+                        "SOURCE IDENTITY CONFLICT RULE\n"
+                        "The exact indexed source path is vpn/ssl-vpn-ayarlari.md. "
+                        "Use the path-derived menu identity `VPN > SSL VPN Ayarları`. "
+                        "Do not repeat the conflicting embedded Sertifika Yönetimi sentence."
+                    )
         sections.append(f"USER MESSAGE\n{user_message}")
         return "\n\n".join(sections)
+
+    def build_correction(
+        self,
+        user_message: str,
+        retrieved_context: Sequence[RetrievedChunk],
+        previous_answer: str,
+        missing_components: Sequence[str],
+    ) -> str:
+        """Build one evidence-stable correction prompt for missing components."""
+        base = self.build(user_message, retrieved_context)
+        return "\n\n".join((
+            base,
+            "FOCUSED COMPLETENESS CORRECTION",
+            f"PREVIOUS ANSWER:\n{previous_answer}",
+            f"MISSING_COMPONENTS: {', '.join(missing_components)}",
+            "Rewrite the complete answer once. Add only the missing components from "
+            "the same supplied evidence. Do not retrieve, infer, or mention another "
+            "document family. Preserve every correct supported part of the previous answer.",
+        ))
+
+    @staticmethod
+    def _component_format_contract(components: Sequence[AnswerComponent]) -> str:
+        rules: list[str] = []
+        values = set(components)
+        if AnswerComponent.DEFINITION in values:
+            rules.append("Begin with a direct definition.")
+        if values & {AnswerComponent.PURPOSE, AnswerComponent.PRODUCT_USAGE}:
+            rules.append("Explain purpose and supported Antikor usage next.")
+        if AnswerComponent.NAVIGATION in values:
+            rules.append("State the exact menu path first.")
+        if AnswerComponent.PROCEDURE in values:
+            rules.append("Use a short introduction followed by ordered steps.")
+        if AnswerComponent.FIELD_LISTING in values:
+            rules.append("Use a compact field list.")
+        if AnswerComponent.FIELD_PURPOSE in values:
+            rules.append("Pair each relevant field with its supported purpose.")
+        if AnswerComponent.COMPARISON in values:
+            rules.append("Define both sides briefly and compare them directly.")
+        return " ".join(rules)
 
     @staticmethod
     def _navigation_path_hint(

@@ -64,6 +64,30 @@ class RecordingPromptBuilder:
         self.received_context = retrieved_context
         return "Final RAG prompt"
 
+    def build_correction(
+        self,
+        user_message: str,
+        retrieved_context: Sequence[RetrievedChunk],
+        previous_answer: str,
+        missing_components: Sequence[str],
+    ) -> str:
+        self.received_message = user_message
+        self.received_context = retrieved_context
+        return "Correction prompt: " + ",".join(missing_components)
+
+
+class SequentialProvider(RecordingProvider):
+    """Return a distinct answer for the completeness retry."""
+
+    def __init__(self, responses: list[str]) -> None:
+        super().__init__(responses[0])
+        self.responses = responses
+
+    async def generate_response(self, prompt: str) -> str:
+        self.call_count += 1
+        self.received_prompt = prompt
+        return self.responses[min(self.call_count - 1, len(self.responses) - 1)]
+
 
 class RetrievalServiceDouble:
     """Retrieval service test double."""
@@ -886,6 +910,48 @@ class ChatServiceTests(unittest.IsolatedAsyncioTestCase):
 
         with self.assertRaises(ChatPromptError):
             await service.generate_response("Question")
+
+    async def test_multi_part_answer_retries_once_for_missing_component(self) -> None:
+        provider = SequentialProvider([
+            "Menü yolu: VPN > SSL VPN Ayarları",
+            (
+                "Menü yolu: VPN > SSL VPN Ayarları. "
+                "SSL VPN, uzak kullanıcıların güvenli bağlantı kurması amacıyla "
+                "kullanılır ve erişimin merkezi olarak yönetilmesini sağlar."
+            ),
+        ])
+        chunks = [
+            create_retrieved_chunk(
+                document_name="ssl-vpn-ayarlari.md",
+                relative_path="guides/antikor_v2/vpn/ssl-vpn-ayarlari.md",
+                section_title="Menü yolu",
+                chunk_text="- `VPN Yönetimi > SSL VPN Ayarları`",
+            ),
+            create_retrieved_chunk(
+                similarity_score=0.89,
+                document_name="ssl-vpn-ayarlari.md",
+                relative_path="guides/antikor_v2/vpn/ssl-vpn-ayarlari.md",
+                section_title="Kapsam",
+                chunk_index=1,
+                chunk_text="SSL VPN uzak kullanıcıların güvenli bağlantısını yönetir.",
+            ),
+        ]
+        service = ChatService(
+            provider=provider,
+            prompt_builder=RecordingPromptBuilder(),  # type: ignore[arg-type]
+            retrieval_service=RetrievalServiceDouble(
+                result=create_retrieval_result(chunks)
+            ),
+        )
+
+        response = await service.generate_response(
+            "SSL VPN ayarları hangi menü altında bulunur ve ne amaçla kullanılır?"
+        )
+
+        self.assertEqual(provider.call_count, 2)
+        self.assertIn("güvenli bağlantı", response.response)
+        self.assertEqual(service.last_diagnostics["completeness_retry_count"], 1)
+        self.assertEqual(service.last_diagnostics["missing_components"], [])
 
 
 if __name__ == "__main__":

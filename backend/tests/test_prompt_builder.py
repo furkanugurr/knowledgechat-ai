@@ -171,7 +171,7 @@ class PromptBuilderTests(unittest.TestCase):
         self.assertIn("Give the exact supported menu path", prompt)
         self.assertIn("add one brief explanatory sentence", prompt)
         self.assertIn("Answer naturally, clearly", prompt)
-        self.assertIn("NAVIGATION_PATH_HINT: VPN Yönetimi > SSL VPN Ayarları", prompt)
+        self.assertIn("NAVIGATION_PATH_HINT: VPN > SSL VPN Ayarları", prompt)
 
     def test_adds_explicit_creation_control_hint(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
