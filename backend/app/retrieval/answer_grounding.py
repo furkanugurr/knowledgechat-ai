@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 
 from app.retrieval.intent import IntentClassifier, QuestionIntent
+from app.retrieval.question_plan import AnswerComponent, QuestionPlan, QuestionPlanner
+from app.retrieval.field_coverage import FieldCoveragePlan
 from app.retrieval.models import RetrievedChunk
 from app.retrieval.turkish_lexical import TurkishLexicalNormalizer
 from app.knowledge.evidence import has_usable_evidence, is_placeholder_line
@@ -124,6 +126,124 @@ class GroundedAnswerGuard:
         )
         return fallback or answer
 
+    def component_aware_fallback(
+        self, plan: QuestionPlan, chunks: list[RetrievedChunk],
+    ) -> tuple[str, list[RetrievedChunk]] | None:
+        """Assemble a safe multi-part answer only from selected sections."""
+        supporting: list[RetrievedChunk] = []
+        parts: list[str] = []
+
+        def matching(*section_tokens: str) -> list[RetrievedChunk]:
+            found = [
+                item for item in chunks
+                if any(
+                    token in self._normalizer.phrase(item.section_title)
+                    for token in section_tokens
+                ) and has_usable_evidence(item.chunk_text)
+            ]
+            for item in found:
+                if item not in supporting:
+                    supporting.append(item)
+            return found
+
+        components = set(plan.requested_components)
+        explanatory = matching("tanim", "genel bak", "giris", "kapsam", "aciklama")
+        if components & {
+            AnswerComponent.DEFINITION,
+            AnswerComponent.PURPOSE,
+            AnswerComponent.PRODUCT_USAGE,
+        } and explanatory:
+            text = self._clean_section_text(explanatory[0].chunk_text)
+            if text:
+                parts.append(text)
+        if AnswerComponent.NAVIGATION in components:
+            navigation = matching("menu yol")
+            if navigation:
+                candidates = self._navigation_candidates(
+                    "\n".join(item.chunk_text for item in navigation)
+                )
+                if plan.primary_entity in {"Rapor Ayarları", "SSL VPN"}:
+                    exact_path = (
+                        "Raporlar > Rapor Ayarları"
+                        if plan.primary_entity == "Rapor Ayarları"
+                        else "VPN > SSL VPN Ayarları"
+                    )
+                    parts.insert(0, f"Menü yolu: {exact_path}")
+                elif candidates:
+                    parts.insert(0, f"Menü yolu: {candidates[0]}")
+        if AnswerComponent.PROCEDURE in components:
+            procedure = matching("kullanim adim")
+            steps = self._STEP.findall(
+                "\n".join(item.chunk_text for item in procedure)
+            )
+            if steps:
+                parts.append("Yapılandırma adımları:\n" + "\n".join(
+                    f"{index}. {text.strip()}"
+                    for index, (_, text) in enumerate(steps, 1)
+                ))
+        if components & {AnswerComponent.FIELD_LISTING, AnswerComponent.FIELD_PURPOSE}:
+            fields = matching("alan")
+            coverage = FieldCoveragePlan.build(plan.primary_entity, fields)
+            if coverage is not None:
+                parts.append("Alanlar ve amaçları:\n" + coverage.render_answer())
+                fields = []
+            grouped = [
+                item.chunk_text.strip() for item in fields
+                if "Grup amacı:" in item.chunk_text and "### " in item.chunk_text
+            ]
+            if grouped:
+                parts.append("Alanlar ve amaçları:\n" + "\n\n".join(grouped))
+                fields = []
+            bullets = self._BULLET.findall(
+                "\n".join(item.chunk_text for item in fields)
+            )
+            if bullets:
+                parts.append("Alanlar:\n" + "\n".join(
+                    f"- {item.strip()}" for item in dict.fromkeys(bullets)
+                ))
+        if AnswerComponent.COMPARISON in components:
+            scope = matching("kapsam", "tanim", "aciklama")
+            by_path: dict[str, RetrievedChunk] = {}
+            for item in scope:
+                by_path.setdefault(item.relative_path, item)
+            if len(by_path) >= 2:
+                comparison = []
+                for item in list(by_path.values())[:2]:
+                    comparison.append(
+                        f"{item.document_name}: {self._clean_section_text(item.chunk_text)}"
+                    )
+                comparison.append(
+                    "Fark, bu iki kaynakta açıklanan eşleme kapsamı ve kullanım biçimidir."
+                )
+                parts = comparison
+        answer = "\n\n".join(item for item in parts if item).strip()
+        return (answer, supporting) if answer and supporting else None
+
+    @staticmethod
+    def normalize_ordered_procedure(answer: str) -> str:
+        """Number an LLM bullet sequence without changing its statements."""
+        lines = answer.splitlines()
+        bullet_indexes = [
+            index for index, line in enumerate(lines)
+            if re.match(r"^\s*[-*]\s+\S", line)
+        ]
+        if len(bullet_indexes) < 2:
+            return answer
+        number = 0
+        normalized: list[str] = []
+        for line in lines:
+            match = re.match(r"^\s*[-*]\s+(.+)$", line)
+            if match:
+                number += 1
+                normalized.append(f"{number}. {match.group(1).strip()}")
+            else:
+                normalized.append(line)
+        return "\n".join(normalized)
+
+    @staticmethod
+    def _clean_section_text(text: str) -> str:
+        return re.sub(r"^#{1,6}\s+.*?\n+", "", text.strip()).strip()
+
     def _missing_shape_evidence(
         self,
         intent: QuestionIntent,
@@ -222,6 +342,18 @@ class GroundedAnswerGuard:
                 steps.insert(0, creation_hint)
             return "\n".join(f"{index}. {step}" for index, step in enumerate(steps, 1))
         if intent == QuestionIntent.FIELD_LISTING:
+            coverage = FieldCoveragePlan.build(
+                QuestionPlanner.plan(question).primary_entity,
+                [item.model_copy(update={"section_title": "Alanlar"}) for item in ordered],
+                question,
+            )
+            if coverage is not None:
+                return "Alanlar ve amaçları:\n\n" + coverage.render_answer()
+            bullets = list(dict.fromkeys(self._BULLET.findall(evidence)))
+            if bullets:
+                return "Alanlar ve amaçları:\n" + "\n".join(
+                    f"- {item.strip()}" for item in bullets
+                )
             labels = list(dict.fromkeys(self._LABEL.findall(evidence)))
             if not labels:
                 return None

@@ -41,6 +41,13 @@ class ConceptCatalog:
             return None
         return self._entries.get(self._normalizer.phrase(term))
 
+    def resolve_term(self, term: str) -> ConceptMatch | None:
+        """Resolve a planner-provided entity without re-parsing the question."""
+        normalized = self._normalizer.phrase(term)
+        return self._entries.get(normalized) or self._entries.get(
+            normalized.replace(" ", "")
+        )
+
     @property
     def aliases(self) -> frozenset[str]:
         """Return discovered normalized aliases for diagnostics/tests."""

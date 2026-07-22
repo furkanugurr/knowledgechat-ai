@@ -109,3 +109,36 @@ class GuideEntityCatalog:
             if len(selected) >= limit:
                 break
         return selected
+
+    def match_families(self, family_hints: tuple[str, ...]) -> list[GuideEntity]:
+        """Return guides whose stable path identity matches planner hints."""
+        normalized_hints = tuple(
+            self._normalizer.phrase(item.replace("-", " "))
+            for item in family_hints
+            if item and item != "product_document"
+        )
+        if not normalized_hints:
+            return []
+        exact = [
+            entity for entity in self._entities
+            if any(
+                hint in entity.identity_aliases
+                or self._normalizer.phrase(
+                    entity.relative_path.rsplit("/", 1)[-1].rsplit(".", 1)[0].replace("-", " ")
+                ) == hint
+                for hint in normalized_hints
+            )
+        ]
+        if exact:
+            return sorted(exact, key=lambda item: item.relative_path)
+        matches = [
+            entity for entity in self._entities
+            if any(
+                set(self._normalizer.tokens(hint)).issubset(
+                    set(self._normalizer.tokens(entity.relative_path.replace("-", " ")))
+                )
+                or hint in entity.identity_aliases
+                for hint in normalized_hints
+            )
+        ]
+        return sorted(matches, key=lambda item: item.relative_path)

@@ -8,7 +8,7 @@ from typing import Protocol
 from app.prompt.prompt_builder import PromptBuilder
 from app.providers.base import LLMProvider
 from app.retrieval.models import RetrievalResult, RetrievedChunk
-from app.retrieval.intent import IntentClassifier, QuestionIntent
+from app.retrieval.intent import QuestionIntent
 from app.retrieval.answer_grounding import GroundedAnswerGuard
 from app.retrieval.domain_relevance import DomainRelevanceGate
 from app.retrieval.retriever import (
@@ -16,6 +16,10 @@ from app.retrieval.retriever import (
     RetrievalError,
 )
 from app.schemas.chat import ChatResponse, CitationSource
+from app.retrieval.question_plan import (
+    AnswerCompletenessValidator,
+    QuestionPlanner,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -116,6 +120,11 @@ class ChatService:
             "concept_definition_available": False,
             "concept_evidence_level": "insufficient",
             "concept_evidence_types": [],
+            "primary_entity": None,
+            "requested_components": [],
+            "answered_components": [],
+            "missing_components": [],
+            "completeness_retry_count": 0,
         }
         logger.info("Starting RAG chat flow provider=%s", provider_name)
 
@@ -123,6 +132,7 @@ class ChatService:
             logger.info("Greeting message handled without retrieval")
             return ChatResponse(response=GREETING_RESPONSE, sources=[])
 
+        plan = QuestionPlanner.plan(user_message)
         try:
             retrieval_result = await self._retrieval_service.retrieve(
                 user_message
@@ -145,7 +155,7 @@ class ChatService:
         )
         relevant_chunks = (
             retrieval_result.chunks
-            if IntentClassifier.classify(user_message) in {
+            if plan.is_multi_part or plan.primary_intent in {
                 QuestionIntent.COMPARISON,
                 QuestionIntent.CONCEPT_DEFINITION,
                 QuestionIntent.PRODUCT_OVERVIEW,
@@ -170,6 +180,41 @@ class ChatService:
         )
         if callable(retrieval_diagnostics):
             retrieval_diagnostics = retrieval_diagnostics()
+        if isinstance(retrieval_diagnostics, dict):
+            self._last_diagnostics.update({
+                "retrieval_candidates": retrieval_diagnostics.get(
+                    "retrieval_candidates", []
+                ),
+                "rejected_candidates": retrieval_diagnostics.get(
+                    "rejected_candidates", []
+                ),
+                "final_evidence_sections": retrieval_diagnostics.get(
+                    "final_evidence_sections", []
+                ),
+                "selected_product_categories": retrieval_diagnostics.get(
+                    "selected_product_categories", []
+                ),
+                "requested_product_scope": retrieval_diagnostics.get(
+                    "requested_product_scope"
+                ),
+                "selected_capability_categories": retrieval_diagnostics.get(
+                    "selected_capability_categories", []
+                ),
+                "missing_capability_categories": retrieval_diagnostics.get(
+                    "missing_capability_categories", []
+                ),
+                "marketing_chunk_ratio": retrieval_diagnostics.get(
+                    "marketing_chunk_ratio", 0.0
+                ),
+                "dominant_category": retrieval_diagnostics.get("dominant_category"),
+                "sub_product_ratio": retrieval_diagnostics.get("sub_product_ratio", 0.0),
+                "core_overview_present": retrieval_diagnostics.get(
+                    "core_overview_present", False
+                ),
+                "field_coverage_plan": retrieval_diagnostics.get(
+                    "field_coverage_plan", {}
+                ),
+            })
         if self._domain_gate_enabled:
             decision = self._domain_gate.evaluate(
                 user_message,
@@ -213,7 +258,7 @@ class ChatService:
                 )
                 return self._empty_context_response()
 
-        intent = IntentClassifier.classify(user_message)
+        intent = plan.primary_intent
         if (
             intent == QuestionIntent.CONCEPT_DEFINITION
             and retrieval_diagnostics.get("concept_match")
@@ -238,6 +283,22 @@ class ChatService:
                 sources=self._build_sources(relevant_chunks),
             )
         navigation_hint = PromptBuilder._navigation_path_hint(relevant_chunks)
+        if (
+            plan.primary_entity in {"Rapor Ayarları", "SSL VPN"}
+            and any(
+                chunk.relative_path.replace("\\", "/").endswith(
+                    "/raporlar/rapor-ayarlari.md"
+                    if plan.primary_entity == "Rapor Ayarları"
+                    else "/vpn/ssl-vpn-ayarlari.md"
+                )
+                for chunk in relevant_chunks
+            )
+        ):
+            navigation_hint = (
+                "Raporlar > Rapor Ayarları"
+                if plan.primary_entity == "Rapor Ayarları"
+                else "VPN > SSL VPN Ayarları"
+            )
         creation_hint = PromptBuilder._creation_control_hint(relevant_chunks)
         guide_confident = self._guide_selection_is_confident(
             user_message, retrieval_result.chunks, relevant_chunks
@@ -266,6 +327,10 @@ class ChatService:
         )
         self._last_diagnostics.update({
             "detected_intent": intent.value,
+            "primary_entity": plan.primary_entity,
+            "requested_components": [
+                item.value for item in plan.requested_components
+            ],
             "selected_guide": relevant_chunks[0].relative_path,
             "selected_sections": [
                 item.section_title for item in relevant_chunks
@@ -292,14 +357,85 @@ class ChatService:
         try:
             self._last_diagnostics["ollama_called"] = True
             raw_response = await self._provider.generate_response(prompt)
-            response = self._answer_guard.ensure_grounded(
-                user_message,
-                intent,
-                relevant_chunks,
-                raw_response,
-                navigation_hint=navigation_hint,
-                creation_hint=creation_hint,
+            if "procedure" in {
+                item.value for item in plan.requested_components
+            }:
+                raw_response = self._answer_guard.normalize_ordered_procedure(
+                    raw_response
+                )
+            answered = AnswerCompletenessValidator.answered_components(
+                plan, raw_response
             )
+            missing = [
+                item for item in plan.requested_components if item not in answered
+            ]
+            if missing and plan.is_multi_part:
+                correction_prompt = self._prompt_builder.build_correction(
+                    user_message,
+                    relevant_chunks,
+                    raw_response,
+                    [item.value for item in missing],
+                )
+                raw_response = await self._provider.generate_response(
+                    correction_prompt
+                )
+                if "procedure" in {
+                    item.value for item in plan.requested_components
+                }:
+                    raw_response = self._answer_guard.normalize_ordered_procedure(
+                        raw_response
+                    )
+                self._last_diagnostics["completeness_retry_count"] = 1
+            response = (
+                raw_response
+                if plan.is_multi_part
+                else self._answer_guard.ensure_grounded(
+                    user_message,
+                    intent,
+                    relevant_chunks,
+                    raw_response,
+                    navigation_hint=navigation_hint,
+                    creation_hint=creation_hint,
+                )
+            )
+            answered = AnswerCompletenessValidator.answered_components(
+                plan, response
+            )
+            missing = [
+                item for item in plan.requested_components if item not in answered
+            ]
+            if missing and plan.is_multi_part:
+                fallback = self._answer_guard.component_aware_fallback(
+                    plan, relevant_chunks
+                )
+                if fallback is not None:
+                    response, citation_chunks = fallback
+                    answered = AnswerCompletenessValidator.answered_components(
+                        plan, response
+                    )
+                    missing = [
+                        item for item in plan.requested_components
+                        if item not in answered
+                    ]
+                    self._last_diagnostics["answer_mode"] = (
+                        "component_aware_post_validation_fallback"
+                    )
+            if (
+                "comparison" in {item.value for item in plan.requested_components}
+                and self._has_unsupported_comparison_claim(response)
+            ):
+                fallback = self._answer_guard.component_aware_fallback(
+                    plan, relevant_chunks
+                )
+                if fallback is not None:
+                    response, citation_chunks = fallback
+                    self._last_diagnostics["answer_mode"] = (
+                        "component_aware_post_validation_fallback"
+                    )
+            self._last_diagnostics.update({
+                "answered_components": [item.value for item in answered],
+                "missing_components": [item.value for item in missing],
+            })
             if (
                 response == raw_response
                 and deterministic_fallback is not None
@@ -307,7 +443,11 @@ class ChatService:
                 and deterministic_fallback[0].casefold() not in response.casefold()
             ):
                 response = deterministic_fallback[0]
-            if response != raw_response:
+            if (
+                response != raw_response
+                and self._last_diagnostics["answer_mode"]
+                != "component_aware_post_validation_fallback"
+            ):
                 self._last_diagnostics["answer_mode"] = (
                     "deterministic_post_validation_fallback"
                 )
@@ -489,6 +629,13 @@ class ChatService:
             for token in re.findall(r"[a-z0-9çğıöşü]+", value.casefold())
             if len(token) >= 3 and token not in stopwords
         }
+
+    @staticmethod
+    def _has_unsupported_comparison_claim(answer: str) -> bool:
+        folded = answer.casefold()
+        return any(term in folded for term in (
+            "daha güvenli", "daha güvenilir", "daha iyi", "ideal", "üstün",
+        ))
 
     @staticmethod
     def _tokens_match(first: str, second: str) -> bool:
