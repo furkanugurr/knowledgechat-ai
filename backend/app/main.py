@@ -12,7 +12,7 @@ from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging
 from app.embedding.ollama_embedding import OllamaEmbeddingProvider
 from app.prompt.prompt_builder import PromptBuilder
-from app.providers.ollama_provider import OllamaProvider
+from app.providers.factory import create_llm_provider
 from app.services.embedding_service import EmbeddingService
 from app.services.retrieval_service import RetrievalService
 from app.services.vector_store_service import VectorStoreService
@@ -29,12 +29,7 @@ def create_lifespan(
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
         prompt_builder = PromptBuilder.from_defaults()
-        provider = OllamaProvider(
-            host=settings.ollama_host,
-            model=settings.chat_model,
-            timeout=settings.request_timeout,
-            max_tokens=settings.chat_max_tokens,
-        )
+        provider = create_llm_provider(settings)
         embedding_provider = OllamaEmbeddingProvider(
             host=settings.ollama_host,
             model=settings.embedding_model,
