@@ -6,6 +6,7 @@ VENV_DIR="${VLLM_VENV_DIR:-$POC_DIR/.venv}"
 MODEL="${VLLM_MODEL:-Qwen/Qwen2.5-0.5B-Instruct}"
 HOST="${VLLM_HOST:-0.0.0.0}"
 PORT="${VLLM_PORT:-8001}"
+MAX_MODEL_LEN="${VLLM_MAX_MODEL_LEN:-2048}"
 PID_FILE="$POC_DIR/vllm.pid"
 LOG_FILE="$POC_DIR/vllm.log"
 
@@ -32,6 +33,7 @@ mkdir -p "$POC_DIR"
 rm -f "$PID_FILE"
 echo "Model: $MODEL"
 echo "API: http://localhost:$PORT"
+echo "Maximum model length: $MAX_MODEL_LEN"
 echo "Log: $LOG_FILE"
 echo "Keep this WSL terminal/process open while the server is in use."
 
@@ -42,7 +44,7 @@ exec "$VENV_DIR/bin/vllm" serve "$MODEL" \
   --host "$HOST" \
   --port "$PORT" \
   --dtype half \
-  --max-model-len 2048 \
+  --max-model-len "$MAX_MODEL_LEN" \
   --gpu-memory-utilization 0.70 \
   --max-num-seqs 1 \
   >>"$LOG_FILE" 2>&1
