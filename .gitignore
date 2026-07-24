@@ -27,6 +27,7 @@ ENV/
 
 # Visual guide extraction work products
 work/visual_guide_extraction/
+work/experiments/
 
 # IDE and editor files
 .idea/
