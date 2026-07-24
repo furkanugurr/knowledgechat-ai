@@ -195,3 +195,9 @@ The first whole-directory frontend mount attempt could not use the Windows
 `node_modules` tree inside Linux. The current source and configuration files
 were then mounted individually over the existing project frontend image, and
 that exact source completed the production build.
+
+## Sprint 2 follow-up
+
+Sprint 2 installed Ubuntu 24.04 under WSL2 and completed the small-model vLLM
+API smoke test. See
+[`sprint-2-vllm-smoke-test-report.md`](sprint-2-vllm-smoke-test-report.md).
