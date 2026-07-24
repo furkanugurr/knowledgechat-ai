@@ -57,10 +57,8 @@ ChatService
     ├──→ PromptBuilder
     ↓
 LLMProvider
-    ↓
-OllamaProvider
-    ↓
-Ollama HTTP API
+    ├──→ OllamaProvider → Ollama HTTP API (default)
+    └──→ VLLMProvider → OpenAI-compatible API (optional)
 ```
 
 - The router validates HTTP input and calls only `ChatService`.
@@ -69,10 +67,11 @@ Ollama HTTP API
 - `PromptBuilder` combines managed system and developer prompts with the user
   message and optional knowledge context.
 - `LLMProvider` defines the provider-independent generation and health contract.
-- `OllamaProvider` contains all Ollama-specific HTTP and response handling.
+- `OllamaProvider` is the default chat implementation.
+- `VLLMProvider` is the optional OpenAI-compatible experimental implementation.
 
-Future providers can implement `LLMProvider` and be selected in the application
-composition root without changing the router, chat service, or prompt builder.
+The application composition root selects either provider without changing the
+router, chat service, prompt builder, retrieval, or citations.
 
 If retrieval returns no chunks or the collection is empty, chat returns a safe
 knowledge-base fallback without calling the LLM.
@@ -440,9 +439,14 @@ Configure `.env` with the local Ollama API, selected model, and request timeout:
 ```dotenv
 ENVIRONMENT=development
 API_V1_PREFIX=/api/v1
+LLM_PROVIDER=ollama
 OLLAMA_HOST=http://localhost:11434
 CHAT_MODEL=gemma3:12b
 CHAT_MAX_TOKENS=768
+VLLM_BASE_URL=http://localhost:8001
+VLLM_MODEL=Qwen/Qwen2.5-0.5B-Instruct
+VLLM_API_KEY=
+VLLM_REQUEST_TIMEOUT_SECONDS=120
 EMBEDDING_MODEL=nomic-embed-text
 VECTOR_DB_PATH=./data/chroma
 VECTOR_COLLECTION_NAME=knowledgechat
@@ -452,6 +456,10 @@ RETRIEVAL_MIN_SIMILARITY=0.65
 REQUEST_TIMEOUT=60
 CORS_ORIGINS=http://localhost:5173
 ```
+
+Set `LLM_PROVIDER=vllm` only for the experimental Sprint 3 chat path. Ollama
+continues to provide embeddings, and the omitted/default value remains
+`ollama`.
 
 `CORS_ORIGINS` is a comma-separated list of browser origins allowed to call the
 API. Its default permits the local Vite development server.

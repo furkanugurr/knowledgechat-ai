@@ -7,6 +7,7 @@ from app.providers.base import (
     LLMProviderUnavailableError,
 )
 from app.providers.ollama_provider import OllamaProvider
+from app.providers.vllm_provider import VLLMProvider
 
 __all__ = [
     "LLMProvider",
@@ -14,4 +15,5 @@ __all__ = [
     "LLMProviderTimeoutError",
     "LLMProviderUnavailableError",
     "OllamaProvider",
+    "VLLMProvider",
 ]

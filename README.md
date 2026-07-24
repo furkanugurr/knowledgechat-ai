@@ -25,7 +25,7 @@ FastAPI → RetrievalService → ChromaDB
       ↓                       ↑
 PromptBuilder              Embeddings
       ↓                       ↑
-Ollama chat model      Ollama embedding model
+Ollama or vLLM chat    Ollama embedding model
 ```
 
 Knowledge is prepared separately:
@@ -107,9 +107,12 @@ Important backend variables:
 | `APP_VERSION` | Application version | `0.1.0` |
 | `ENVIRONMENT` | Runtime environment label | `development` |
 | `API_V1_PREFIX` | API route prefix | `/api/v1` |
+| `LLM_PROVIDER` | Chat provider (`ollama` or `vllm`) | `ollama` |
 | `OLLAMA_HOST` | Ollama HTTP API | `http://localhost:11434` |
 | `CHAT_MODEL` | Chat generation model | `gemma3:12b` |
 | `CHAT_MAX_TOKENS` | Maximum tokens generated for a chat answer | `768` |
+| `VLLM_BASE_URL` | Optional vLLM API | `http://localhost:8001` |
+| `VLLM_MODEL` | Optional vLLM model | `Qwen/Qwen2.5-0.5B-Instruct` |
 | `EMBEDDING_MODEL` | Embedding model | `nomic-embed-text` |
 | `VECTOR_DB_PATH` | Persistent ChromaDB path | `./data/chroma` |
 | `VECTOR_COLLECTION_NAME` | Chroma collection | `knowledgechat` |
@@ -123,6 +126,10 @@ The frontend uses:
 ```dotenv
 VITE_API_BASE_URL=http://localhost:8000
 ```
+
+Ollama remains the default chat provider. For the experimental vLLM path,
+start the Sprint 2 WSL server, set `LLM_PROVIDER=vllm`, and configure
+`VLLM_BASE_URL`; embeddings continue to use Ollama.
 
 ## Run Locally
 

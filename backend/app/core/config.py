@@ -23,12 +23,33 @@ class Settings(BaseSettings):
         validation_alias="API_V1_PREFIX",
     )
     log_level: str = Field(validation_alias="LOG_LEVEL")
+    llm_provider: str = Field(
+        default="ollama",
+        validation_alias="LLM_PROVIDER",
+    )
     ollama_host: str = Field(validation_alias="OLLAMA_HOST")
     chat_model: str = Field(validation_alias="CHAT_MODEL")
     chat_max_tokens: int = Field(
         default=768,
         validation_alias="CHAT_MAX_TOKENS",
         ge=128,
+    )
+    vllm_base_url: str = Field(
+        default="http://localhost:8001",
+        validation_alias="VLLM_BASE_URL",
+    )
+    vllm_model: str = Field(
+        default="Qwen/Qwen2.5-0.5B-Instruct",
+        validation_alias="VLLM_MODEL",
+    )
+    vllm_api_key: str = Field(
+        default="",
+        validation_alias="VLLM_API_KEY",
+    )
+    vllm_request_timeout_seconds: float = Field(
+        default=120,
+        validation_alias="VLLM_REQUEST_TIMEOUT_SECONDS",
+        gt=0,
     )
     embedding_model: str = Field(validation_alias="EMBEDDING_MODEL")
     vector_db_path: Path = Field(validation_alias="VECTOR_DB_PATH")
@@ -92,6 +113,15 @@ class Settings(BaseSettings):
         normalized_value = value.upper()
         if normalized_value not in logging.getLevelNamesMapping():
             raise ValueError(f"Unsupported log level: {value}")
+        return normalized_value
+
+    @field_validator("llm_provider")
+    @classmethod
+    def validate_llm_provider(cls, value: str) -> str:
+        """Normalize and validate the selected chat generation provider."""
+        normalized_value = value.strip().lower()
+        if normalized_value not in {"ollama", "vllm"}:
+            raise ValueError("LLM_PROVIDER must be 'ollama' or 'vllm'")
         return normalized_value
 
     @field_validator("api_v1_prefix")
